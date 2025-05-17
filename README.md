@@ -96,7 +96,7 @@ A modern MERN stack platform with Tailwind CSS, role-based dashboards, and scala
 1. Clone the repository:
 
 bash
-git clone https://github.com/YOUR_USERNAME/BeaconPort.git
+git clone https://github.com/kalviumcommunity/S86_Bhavdeep_Capstone_BeaconPort.git
 cd BeaconPort
 
 
