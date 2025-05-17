@@ -107,7 +107,7 @@ Managing large-scale student data, classes, and communication within schools is 
 ### 1️⃣ Clone the repository  
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/BeaconPort.git
+git clone https://github.com/kalviumcommunity/S86_Bhavdeep_Capstone_BeaconPort.git
 cd BeaconPort
 ```
 
