@@ -108,7 +108,6 @@ Managing large-scale student data, classes, and communication within schools is 
 
 ```bash
 git clone https://github.com/kalviumcommunity/S86_Bhavdeep_Capstone_BeaconPort.git
-cd BeaconPort
 ```
 
 ### 2️⃣ Install dependencies  
@@ -131,7 +130,7 @@ Create a `.env` file in both the **client** and **server** directories using `.e
 ```bash
 # Backend server
 cd server
-npm run dev
+node server.js
 
 # Frontend server
 cd ../client
