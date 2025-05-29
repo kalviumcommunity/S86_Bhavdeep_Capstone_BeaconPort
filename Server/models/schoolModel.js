@@ -4,8 +4,8 @@ const schoolSchema = new mongoose.Schema({
     schoolName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     ownerName: { type: String, required: true },
-    schoolImg: { type: String, required: true }, // Now stores Cloudinary URL
-    schoolImgPublicId: { type: String }, // Stores Cloudinary public ID for deletion
+    schoolImg: { type: String, required: true }, 
+    schoolImgPublicId: { type: String }, 
     password: { type: String, required: true },
         
     isOAuthUser: { type: Boolean, default: false },

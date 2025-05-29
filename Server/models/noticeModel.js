@@ -42,7 +42,7 @@ const noticeSchema = new mongoose.Schema({
     expiryDate: {
         type: Date,
         default: function () {
-            // Default to 30 days from creation
+            
             const date = new Date();
             date.setDate(date.getDate() + 30);
             return date;
@@ -50,13 +50,13 @@ const noticeSchema = new mongoose.Schema({
     }
 });
 
-// Middleware to update the updatedAt field before saving
+
 noticeSchema.pre('save', function(next) {
     this.updatedAt = new Date();
     next();
 });
 
-// Middleware to update the updatedAt field before updating
+
 noticeSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function(next) {
     this.set({ updatedAt: new Date() });
     next();

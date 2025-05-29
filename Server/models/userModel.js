@@ -47,14 +47,14 @@ const userSchema = new mongoose.Schema({
         default: Date.now
     }
 }, {
-    timestamps: true // This will automatically handle createdAt and updatedAt
+    timestamps: true 
 });
 
-// Index for better query performance
+
 userSchema.index({ email: 1 });
 userSchema.index({ schoolId: 1, role: 1 });
 
-// Middleware to update the updatedAt field before saving
+
 userSchema.pre('save', function(next) {
     if (!this.isNew) {
         this.updatedAt = new Date();
@@ -62,7 +62,7 @@ userSchema.pre('save', function(next) {
     next();
 });
 
-// Middleware to update the updatedAt field before updating
+
 userSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function(next) {
     this.set({ updatedAt: new Date() });
     next();
