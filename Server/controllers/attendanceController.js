@@ -15,7 +15,7 @@ module.exports = {
         });
       }
 
-      // Validate studentId
+     
       if (!mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({
           success: false,
@@ -23,7 +23,7 @@ module.exports = {
         });
       }
 
-      // Validate classId
+     
       if (!mongoose.Types.ObjectId.isValid(classId)) {
         return res.status(400).json({
           success: false,
@@ -31,7 +31,7 @@ module.exports = {
         });
       }
 
-      // Ensure status is valid
+     
       if (!['Present', 'Absent'].includes(status)) {
         return res.status(400).json({
           success: false,
@@ -39,7 +39,7 @@ module.exports = {
         });
       }
 
-      // Ensure date is properly formatted
+     
       const formattedDate = moment(date, "YYYY-MM-DD", true);
       if (!formattedDate.isValid()) {
         return res.status(400).json({
@@ -48,7 +48,7 @@ module.exports = {
         });
       }
 
-      // Check if attendance already exists for this specific student on this date
+     
       const existingAttendance = await Attendance.findOne({
         student: studentId,
         date: {
@@ -67,7 +67,7 @@ module.exports = {
         });
       }
 
-      // Create new attendance record
+     
       const newAttendance = new Attendance({
         student: studentId,
         date: formattedDate.toDate(),
@@ -93,13 +93,13 @@ module.exports = {
     }
   },
 
-  // New method for bulk attendance submission
+ 
   markBulkAttendance: async (req, res) => {
     try {
       const { attendanceData, classId, date } = req.body;
       const schoolId = req.user.schoolId;
 
-      // Validate required fields
+     
       if (!attendanceData || !Array.isArray(attendanceData) || !classId || !date) {
         return res.status(400).json({
           success: false,
@@ -107,7 +107,7 @@ module.exports = {
         });
       }
 
-      // Validate classId
+     
       if (!mongoose.Types.ObjectId.isValid(classId)) {
         return res.status(400).json({
           success: false,
@@ -115,7 +115,7 @@ module.exports = {
         });
       }
 
-      // Ensure date is properly formatted
+     
       const formattedDate = moment(date, "YYYY-MM-DD", true);
       if (!formattedDate.isValid()) {
         return res.status(400).json({
@@ -124,7 +124,7 @@ module.exports = {
         });
       }
 
-      // Check if attendance has already been taken for this class today
+     
       const existingAttendance = await Attendance.findOne({
         class: classId,
         school: schoolId,
@@ -141,7 +141,7 @@ module.exports = {
         });
       }
 
-      // Validate all student IDs and attendance data
+     
       const validAttendanceData = [];
       for (const record of attendanceData) {
         if (!record.studentId || !mongoose.Types.ObjectId.isValid(record.studentId)) {
@@ -168,7 +168,7 @@ module.exports = {
         });
       }
 
-      // Insert all attendance records
+     
       const savedAttendance = await Attendance.insertMany(validAttendanceData);
 
       res.status(201).json({
@@ -190,7 +190,7 @@ module.exports = {
     try {
       const studentId = req.params.id;
 
-      // Validate studentId
+     
       if (!studentId || !mongoose.Types.ObjectId.isValid(studentId)) {
         return res.status(400).json({ 
           success: false, 
@@ -200,7 +200,7 @@ module.exports = {
 
       console.log(`Fetching attendance for student ID: ${studentId}`);
 
-      // Get student info
+     
       const student = await Student.findById(studentId)
         .populate('studentClass');
 
@@ -211,7 +211,7 @@ module.exports = {
         });
       }
 
-      // Get attendance records
+     
       const attendance = await Attendance.find({ student: studentId })
         .populate({
           path: 'class',
@@ -235,7 +235,7 @@ module.exports = {
     }
   },
 
-  // Get bulk attendance for multiple students
+ 
   getBulkAttendance: async (req, res) => {
     try {
       const { studentIds } = req.body;
@@ -248,7 +248,7 @@ module.exports = {
         });
       }
 
-      // Validate all student IDs
+     
       const validIds = studentIds.every(id => mongoose.Types.ObjectId.isValid(id));
       if (!validIds) {
         return res.status(400).json({
@@ -257,7 +257,7 @@ module.exports = {
         });
       }
 
-      // Prepare date filter if provided
+     
       let dateFilter = {};
       if (startDate && endDate) {
         const startDateObj = moment(startDate, "YYYY-MM-DD", true);
@@ -278,7 +278,7 @@ module.exports = {
         };
       }
 
-      // Get attendance for all students
+     
       const attendanceRecords = await Attendance.find({
         student: { $in: studentIds },
         ...dateFilter
@@ -287,7 +287,7 @@ module.exports = {
       .populate('class', 'classText section')
       .sort({ date: -1 });
 
-      // Group by student for easier frontend processing
+     
       const groupedAttendance = {};
       attendanceRecords.forEach(record => {
         const studentId = record.student._id.toString();
