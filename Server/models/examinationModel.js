@@ -19,9 +19,9 @@ const examinationSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: [
-      // School-only exam types (main/big exams)
+      
       'Mid Term', 'Final Term', 'Annual Exam', 'Semester Exam',
-      // Teacher-allowed exam types (small tests/quizzes)
+      
       'Quiz', 'Class Test', 'Pop Quiz', 'Unit Test', 'Weekly Test', 'Slip Test'
     ]
   },
@@ -31,7 +31,7 @@ const examinationSchema = new mongoose.Schema({
     required: true
   },
   startTime: {
-    type: String, // Store as string in HH:MM format
+    type: String, 
     required: true,
     validate: {
       validator: function(v) {
@@ -41,7 +41,7 @@ const examinationSchema = new mongoose.Schema({
     }
   },
   endTime: {
-    type: String, // Store as string in HH:MM format
+    type: String, 
     required: true,
     validate: {
       validator: function(v) {
@@ -51,11 +51,11 @@ const examinationSchema = new mongoose.Schema({
     }
   },
   duration: {
-    type: Number, // Store duration in minutes
+    type: Number, 
     required: true,
     min: [1, 'Duration must be at least 1 minute']
   },
-  // Field to track who created the exam
+  
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -66,7 +66,7 @@ const examinationSchema = new mongoose.Schema({
     required: true,
     enum: ['School', 'Teacher']
   },
-  // Field to track creator's role for easier filtering
+  
   creatorRole: {
     type: String,
     required: true,
@@ -86,13 +86,13 @@ const examinationSchema = new mongoose.Schema({
   }
 });
 
-// Update the updatedAt timestamp before saving
+
 examinationSchema.pre("save", function(next) {
   this.updatedAt = Date.now();
   next();
 });
 
-// Pre-save validation to ensure end time is after start time
+
 examinationSchema.pre("save", function(next) {
   const startTime = new Date(`1970-01-01T${this.startTime}`);
   const endTime = new Date(`1970-01-01T${this.endTime}`);
@@ -105,7 +105,7 @@ examinationSchema.pre("save", function(next) {
   next();
 });
 
-// Index for better query performance
+
 examinationSchema.index({ school: 1, class: 1 });
 examinationSchema.index({ createdBy: 1, creatorRole: 1 });
 examinationSchema.index({ examDate: 1 });

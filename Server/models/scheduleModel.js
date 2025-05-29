@@ -52,7 +52,7 @@ const scheduleSchema = new mongoose.Schema({
     }
 });
 
-// Add validation to ensure end time is after start time
+
 scheduleSchema.pre('save', function(next) {
     if (this.startTime >= this.endTime) {
         return next(new Error('End time must be after start time'));
@@ -60,7 +60,7 @@ scheduleSchema.pre('save', function(next) {
     next();
 });
 
-// Create index for auto-expiration check
+
 scheduleSchema.index({ endTime: 1, status: 1 });
 
 module.exports = mongoose.model("Schedule", scheduleSchema);
