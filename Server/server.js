@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cron = require("node-cron");
 const path = require("path");
@@ -28,6 +29,17 @@ const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("MongoDB connected");
+    setupScheduleCleanupJob();
+  })
+  .catch((err) => {
+    console.log("Connection error", err);
+  });
+
 
 function setupScheduleCleanupJob() {
   cron.schedule(
