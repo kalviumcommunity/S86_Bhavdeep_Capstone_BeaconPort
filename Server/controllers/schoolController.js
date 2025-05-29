@@ -10,14 +10,14 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const cloudinary = require("cloudinary").v2;
 
-// Configure Cloudinary
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Helper function to upload image to Cloudinary
+
 const uploadToCloudinary = async (filePath, folder = 'school_management') => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
@@ -44,7 +44,7 @@ const uploadToCloudinary = async (filePath, folder = 'school_management') => {
   }
 };
 
-// Helper function to delete image from Cloudinary
+
 const deleteFromCloudinary = async (public_id) => {
   try {
     if (!public_id) return { result: 'ok' };
@@ -57,9 +57,9 @@ const deleteFromCloudinary = async (public_id) => {
   }
 };
 
-// Email configuration
+
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: "Gmail",
     auth: {
       user: process.env.EMAIL_USER,
@@ -68,7 +68,7 @@ const createTransporter = () => {
   });
 };
 
-// Helper function to clean up temporary files
+
 const cleanupTempFile = (filePath) => {
   try {
     if (filePath && fs.existsSync(filePath)) {
@@ -85,7 +85,7 @@ module.exports = {
     
     try {
       const form = new formidable.IncomingForm({
-        maxFileSize: 10 * 1024 * 1024, // 10MB limit
+        maxFileSize: 10 * 1024 * 1024, 
         allowEmptyFiles: false,
         filter: ({ name, originalFilename, mimetype }) => {
           return name === 'image' && mimetype && mimetype.includes('image');
@@ -101,7 +101,7 @@ module.exports = {
         }
 
         try {
-          // Validate required fields
+          
           const requiredFields = ['schoolName', 'email', 'ownerName', 'password'];
           for (const field of requiredFields) {
             if (!fields[field] || !fields[field][0]) {
@@ -112,7 +112,7 @@ module.exports = {
             }
           }
 
-          // Validate image
+          
           if (!files.image || !files.image[0]) {
             return res.status(400).json({ 
               success: false, 
@@ -123,7 +123,7 @@ module.exports = {
           const photo = files.image[0];
           tempFilePath = photo.filepath;
 
-          // Validate image file
+          
           if (!photo.mimetype || !photo.mimetype.startsWith('image/')) {
             cleanupTempFile(tempFilePath);
             return res.status(400).json({
@@ -132,7 +132,7 @@ module.exports = {
             });
           }
 
-          // Check if school with email already exists
+          
           const existingSchool = await School.findOne({ email: fields.email[0] });
           if (existingSchool) {
             cleanupTempFile(tempFilePath);
@@ -142,7 +142,7 @@ module.exports = {
             });
           }
 
-          // Upload image to Cloudinary
+          
           const uploadResult = await uploadToCloudinary(
             photo.filepath, 
             'school_management/schools'
@@ -157,14 +157,14 @@ module.exports = {
             });
           }
 
-          // Clean up temporary file
+          
           cleanupTempFile(tempFilePath);
 
-          // Hash password
+          
           const salt = bcrypt.genSaltSync(10);
           const hashPassword = bcrypt.hashSync(fields.password[0], salt);
 
-          // Create new school
+          
           const newSchool = new School({
             schoolName: fields.schoolName[0].trim(),
             email: fields.email[0].toLowerCase().trim(),
@@ -176,7 +176,7 @@ module.exports = {
 
           const savedSchool = await newSchool.save();
           
-          // Remove password from response
+          
           const schoolData = savedSchool.toObject();
           delete schoolData.password;
           delete schoolData.resetPasswordToken;
@@ -217,7 +217,7 @@ module.exports = {
     
     try {
       const form = new formidable.IncomingForm({
-        maxFileSize: 10 * 1024 * 1024, // 10MB limit
+        maxFileSize: 10 * 1024 * 1024, 
         allowEmptyFiles: false,
         filter: ({ name, originalFilename, mimetype }) => {
           return name === 'image' && mimetype && mimetype.includes('image');
@@ -235,7 +235,7 @@ module.exports = {
         try {
           const { token, schoolName, ownerName } = fields;
 
-          // Validate required fields
+          
           if (!token || !token[0] || !schoolName || !schoolName[0] || !ownerName || !ownerName[0]) {
             return res.status(400).json({
               success: false,
@@ -243,7 +243,7 @@ module.exports = {
             });
           }
 
-          // Validate image
+          
           if (!files.image || !files.image[0]) {
             return res.status(400).json({
               success: false,
@@ -254,7 +254,7 @@ module.exports = {
           const photo = files.image[0];
           tempFilePath = photo.filepath;
 
-          // Validate image file
+          
           if (!photo.mimetype || !photo.mimetype.startsWith('image/')) {
             cleanupTempFile(tempFilePath);
             return res.status(400).json({
@@ -263,7 +263,7 @@ module.exports = {
             });
           }
 
-          // Verify Google token
+          
           const googleResponse = await axios.get(
             `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${token[0]}`,
             { timeout: 10000 }
@@ -279,7 +279,7 @@ module.exports = {
             });
           }
 
-          // Check if school already exists
+          
           const existingSchool = await School.findOne({ 
             $or: [
               { email: email },
@@ -295,7 +295,7 @@ module.exports = {
             });
           }
 
-          // Upload image to Cloudinary
+          
           const uploadResult = await uploadToCloudinary(
             photo.filepath, 
             'school_management/schools/google'
@@ -310,15 +310,15 @@ module.exports = {
             });
           }
 
-          // Clean up temporary file
+          
           cleanupTempFile(tempFilePath);
 
-          // Generate a random password for OAuth users
+          
           const randomPassword = crypto.randomBytes(16).toString('hex');
           const salt = bcrypt.genSaltSync(10);
           const hashPassword = bcrypt.hashSync(randomPassword, salt);
 
-          // Create new school
+          
           const newSchool = new School({
             schoolName: schoolName[0].trim(),
             email: email.toLowerCase().trim(),
@@ -333,7 +333,7 @@ module.exports = {
 
           const savedSchool = await newSchool.save();
 
-          // Remove sensitive data from response
+          
           const schoolData = savedSchool.toObject();
           delete schoolData.password;
           delete schoolData.resetPasswordToken;
@@ -394,7 +394,7 @@ module.exports = {
         });
       }
 
-      // Check if it's an OAuth user trying to login with password
+      
       if (school.isOAuthUser) {
         return res.status(400).json({
           success: false,
@@ -465,7 +465,7 @@ module.exports = {
         });
       }
 
-      // Find school with Google OAuth
+      
       const school = await School.findOne({
         email: email.toLowerCase().trim(),
         oauthProvider: "google",
@@ -532,7 +532,7 @@ module.exports = {
         });
       }
 
-      // Find the school by email
+      
       const school = await School.findOne({ 
         email: email.toLowerCase().trim() 
       });
@@ -544,7 +544,7 @@ module.exports = {
         });
       }
 
-      // Check if it's an OAuth user
+      
       if (school.isOAuthUser) {
         return res.status(400).json({
           success: false,
@@ -552,21 +552,21 @@ module.exports = {
         });
       }
 
-      // Generate reset token
+      
       const resetToken = crypto.randomBytes(32).toString("hex");
-      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+      const resetTokenExpiry = new Date(Date.now() + 3600000); 
 
-      // Save reset token to database
+      
       school.resetPasswordToken = resetToken;
       school.resetPasswordExpires = resetTokenExpiry;
       await school.save();
 
-      // Create password reset URL
+      
       const resetURL = `${
         process.env.FRONTEND_URL || "http://localhost:3000"
       }/reset-password/${resetToken}`;
 
-      // Email content
+      
       const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
@@ -598,7 +598,7 @@ module.exports = {
         `,
       };
 
-      // Send email
+      
       const transporter = createTransporter();
       await transporter.sendMail(mailOptions);
 
@@ -633,7 +633,7 @@ module.exports = {
         });
       }
 
-      // Find school with valid reset token
+      
       const school = await School.findOne({
         resetPasswordToken: token,
         resetPasswordExpires: { $gt: new Date() },
@@ -646,11 +646,11 @@ module.exports = {
         });
       }
 
-      // Hash new password
+      
       const salt = bcrypt.genSaltSync(10);
       const hashPassword = bcrypt.hashSync(newPassword, salt);
 
-      // Update password and clear reset token
+      
       school.password = hashPassword;
       school.resetPasswordToken = null;
       school.resetPasswordExpires = null;
@@ -777,7 +777,7 @@ module.exports = {
     }
   },
 
-// Update School
+
 updateSchool: async (req, res) => {
   let tempFilePath = null;
 
@@ -785,7 +785,7 @@ updateSchool: async (req, res) => {
     const id = req.user.id;
 
     const form = new formidable.IncomingForm({
-      maxFileSize: 10 * 1024 * 1024, // 10MB limit
+      maxFileSize: 10 * 1024 * 1024, 
       allowEmptyFiles: true,
       filter: ({ name, originalFilename, mimetype }) => {
         if (name === 'image' && originalFilename) {
@@ -813,7 +813,7 @@ updateSchool: async (req, res) => {
           });
         }
 
-        // Update basic fields
+        
         const allowedFields = ['schoolName', 'ownerName', 'email'];
         allowedFields.forEach((field) => {
           if (fields[field] && fields[field][0]) {
@@ -821,12 +821,12 @@ updateSchool: async (req, res) => {
           }
         });
 
-        // Handle image update if provided
+        
         if (files.image && files.image[0]) {
           const photo = files.image[0];
           tempFilePath = photo.filepath;
 
-          // Validate image file
+          
           if (!photo.mimetype || !photo.mimetype.startsWith('image/')) {
             cleanupTempFile(tempFilePath);
             return res.status(400).json({
@@ -835,7 +835,7 @@ updateSchool: async (req, res) => {
             });
           }
 
-          // Upload new image to Cloudinary
+          
           const uploadResult = await uploadToCloudinary(photo.filepath, 'school_management/schools/updated');
 
           if (!uploadResult.success) {
@@ -847,22 +847,22 @@ updateSchool: async (req, res) => {
             });
           }
 
-          // Delete old image from Cloudinary if it exists
+          
           if (school.schoolImgPublicId) {
             await deleteFromCloudinary(school.schoolImgPublicId);
           }
 
-          // Clean up temporary file
+          
           cleanupTempFile(tempFilePath);
 
-          // Update school image references
+          
           school.schoolImg = uploadResult.url;
           school.schoolImgPublicId = uploadResult.public_id;
         }
 
         await school.save();
 
-        // Return updated school data without sensitive information
+        
         const updatedSchool = school.toObject();
         delete updatedSchool.password;
         delete updatedSchool.resetPasswordToken;
@@ -899,7 +899,7 @@ updateSchool: async (req, res) => {
   }
 },
 
-// Delete School
+
 deleteSchool: async (req, res) => {
   try {
     const id = req.user.id;
@@ -913,12 +913,12 @@ deleteSchool: async (req, res) => {
       });
     }
 
-    // Delete image from Cloudinary if exists
+    
     if (school.schoolImgPublicId) {
       await deleteFromCloudinary(school.schoolImgPublicId);
     }
 
-    // Delete school from database
+    
     await School.findByIdAndDelete(id);
 
     res.status(200).json({

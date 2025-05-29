@@ -21,7 +21,7 @@ registerTeacher: async (req, res) => {
           .json({ success: false, message: "Teacher image is required" });
       }
 
-      // Check for required fields based on the schema
+    
       const requiredFields = [
         "email",
         "name",
@@ -39,7 +39,7 @@ registerTeacher: async (req, res) => {
         }
       }
 
-      // Check if email already exists
+    
       const existingTeacher = await Teacher.findOne({
         email: fields.email[0],
       });
@@ -275,9 +275,9 @@ registerTeacher: async (req, res) => {
             .json({ success: false, message: "Teacher not found" });
         }
 
-        // Update fields from form data (take first element if array)
+      
         Object.keys(fields).forEach((field) => {
-          // Handle special cases and skip password updates here
+        
           if (
             field !== "teacherClasses" &&
             field !== "subjects" // password handled separately below
@@ -288,7 +288,7 @@ registerTeacher: async (req, res) => {
           }
         });
 
-        // Handle teacherClasses as JSON array
+      
         if (fields.teacherClasses && fields.teacherClasses[0]) {
           try {
             teacher.teacherClasses = JSON.parse(fields.teacherClasses[0]);
@@ -297,7 +297,7 @@ registerTeacher: async (req, res) => {
           }
         }
 
-        // Handle subjects as JSON array
+      
         if (fields.subjects && fields.subjects[0]) {
           try {
             teacher.subjects = JSON.parse(fields.subjects[0]);
@@ -305,7 +305,7 @@ registerTeacher: async (req, res) => {
             console.error("Error parsing subjects:", e);
           }
         } else if (fields.subject && fields.subject[0]) {
-          // For backward compatibility
+        
           try {
             teacher.subjects = JSON.parse(fields.subject[0]);
           } catch (e) {
@@ -313,18 +313,18 @@ registerTeacher: async (req, res) => {
           }
         }
 
-        // Handle password updates separately (store as plain text)
+      
         if (fields.password && fields.password[0]) {
           teacher.password = fields.password[0];
         }
 
-        // Handle image update if provided
+      
         if (files.image && files.image[0]) {
           const photo = files.image[0];
           let filepath = photo.filepath;
           let originalFilename = photo.originalFilename.replace(/\s+/g, "_");
 
-          // Delete old image if exists
+        
           if (teacher.teacherImg) {
             let oldImagePath = path.join(
               __dirname,
@@ -336,7 +336,7 @@ registerTeacher: async (req, res) => {
             }
           }
 
-          // Generate unique filename to avoid conflicts
+        
           const timestamp = Date.now();
           const fileExtension = path.extname(photo.originalFilename);
           const originalName = path
@@ -346,7 +346,7 @@ registerTeacher: async (req, res) => {
 
           let newPath = path.join(__dirname, "../uploads/teacher/", uniqueFilename);
 
-          // Create directory if it doesn't exist
+        
           const dir = path.dirname(newPath);
           if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
@@ -360,7 +360,7 @@ registerTeacher: async (req, res) => {
 
         await teacher.save();
 
-        // Return updated teacher without sensitive data
+      
         const updatedTeacher = await Teacher.findById(teacher._id)
           .populate("teacherClasses")
           .populate("subjects")
@@ -396,7 +396,7 @@ registerTeacher: async (req, res) => {
         });
       }
 
-      // Delete teacher image if exists
+    
       if (deletedTeacher.teacherImg) {
         let imagePath = path.join(
           __dirname,

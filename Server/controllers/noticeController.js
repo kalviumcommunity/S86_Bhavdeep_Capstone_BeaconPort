@@ -28,7 +28,7 @@ module.exports = {
         });
       }
 
-      // Teachers can only create notices for Students
+      
       if (req.user.role === "TEACHER" && audience !== "Student") {
         return res.status(403).json({
           success: false,
@@ -89,42 +89,42 @@ module.exports = {
       let filter = { school: schoolId };
       const sort = {};
 
-      // Role-based filtering
+      
       if (userRole === "TEACHER") {
-        // Teachers can see:
-        // 1. Notices they created (for students)
-        // 2. Notices created by school for teachers
+        
+        
+        
         filter.$or = [
           { 
             createdBy: userId,
-            audience: "Student" // Only their student notices
+            audience: "Student" 
           },
           { 
-            audience: "Teacher" // All notices for teachers (created by school)
+            audience: "Teacher" 
           }
         ];
       } else if (userRole === "STUDENT") {
-        // Students can see notices targeted to them or all
+        
         filter.$or = [
           { audience: "Student" },
           { audience: "All" }
         ];
       }
-      // SCHOOL role can see all notices (no additional filter needed)
+      
 
-      // Apply audience filter if provided
+      
       if (req.query.audience && req.query.audience !== "All") {
         if (userRole === "TEACHER") {
-          // For teachers, audience filter should work within their permissions
+          
           if (req.query.audience === "Student") {
-            // Only their own student notices
+            
             filter = {
               school: schoolId,
               createdBy: userId,
               audience: "Student"
             };
           } else if (req.query.audience === "Teacher") {
-            // Only notices for teachers
+            
             filter = {
               school: schoolId,
               audience: "Teacher"
@@ -139,7 +139,7 @@ module.exports = {
         }
       }
 
-      // Apply search filter if provided
+      
       if (req.query.search) {
         const searchFilter = {
           $or: [
@@ -148,7 +148,7 @@ module.exports = {
           ]
         };
         
-        // Combine with existing filter
+        
         if (filter.$or) {
           filter = {
             $and: [
@@ -162,12 +162,12 @@ module.exports = {
         }
       }
 
-      // Apply importance filter if provided
+      
       if (req.query.important === "true") {
         filter.isImportant = true;
       }
 
-      // Apply date filters if provided
+      
       if (req.query.startDate && req.query.endDate) {
         filter.createdAt = {
           $gte: new Date(req.query.startDate),
@@ -179,14 +179,14 @@ module.exports = {
         filter.createdAt = { $lte: new Date(req.query.endDate) };
       }
 
-      // Apply sorting
+      
       if (req.query.sortBy) {
         sort[req.query.sortBy] = req.query.sortOrder === "asc" ? 1 : -1;
       } else {
         sort.createdAt = -1;
       }
 
-      // Pagination
+      
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
@@ -237,9 +237,9 @@ module.exports = {
 
       let filter = { _id: noticeId, school: schoolId };
 
-      // Role-based filtering
+      
       if (userRole === "TEACHER") {
-        // Teachers can see notices they created OR notices for teachers
+        
         filter.$or = [
           { 
             createdBy: userId,
@@ -296,14 +296,14 @@ module.exports = {
         audience: audience,
       };
 
-      // Role-based filtering
+      
       if (userRole === "TEACHER") {
         if (audience === "Student") {
-          // Only their own student notices
+          
           filter.createdBy = userId;
         } else if (audience === "Teacher") {
-          // All notices for teachers
-          // No additional filter needed, just audience: "Teacher"
+          
+          
         } else {
           return res.status(403).json({
             success: false,
@@ -372,7 +372,7 @@ module.exports = {
         audience: existingNotice.audience
       });
 
-      // Check permissions based on user role
+      
       if (req.user.role === "TEACHER") {
         let createdById;
         if (existingNotice.createdBy && typeof existingNotice.createdBy === 'object') {
@@ -388,7 +388,7 @@ module.exports = {
           newAudience: audience
         });
 
-        // Teachers can only modify notices they created themselves
+        
         if (createdById !== userId.toString()) {
           return res.status(403).json({
             success: false,
@@ -396,7 +396,7 @@ module.exports = {
           });
         }
 
-        // Ensure the existing notice is for students
+        
         if (existingNotice.audience !== "Student") {
           return res.status(403).json({
             success: false,
@@ -404,7 +404,7 @@ module.exports = {
           });
         }
 
-        // Teachers can only modify notices to be for students
+        
         if (audience && audience !== "Student") {
           return res.status(403).json({
             success: false,
@@ -490,7 +490,7 @@ module.exports = {
         });
       }
 
-      // Check permissions based on user role
+      
       if (req.user.role === "TEACHER") {
         let createdById;
         if (existingNotice.createdBy && typeof existingNotice.createdBy === 'object') {
@@ -499,7 +499,7 @@ module.exports = {
           createdById = existingNotice.createdBy?.toString();
         }
         
-        // Teachers can only delete notices they created themselves
+        
         if (createdById !== userId.toString()) {
           return res.status(403).json({
             success: false,
@@ -507,7 +507,7 @@ module.exports = {
           });
         }
 
-        // Ensure it's a student notice
+        
         if (existingNotice.audience !== "Student") {
           return res.status(403).json({
             success: false,
@@ -584,7 +584,7 @@ module.exports = {
         isImportant: true,
       };
 
-      // Role-based filtering
+      
       if (userRole === "TEACHER") {
         filter.$or = [
           { 
@@ -629,7 +629,7 @@ module.exports = {
         expiryDate: { $gte: currentDate },
       };
 
-      // Role-based filtering
+      
       if (userRole === "TEACHER") {
         filter.$or = [
           { 
