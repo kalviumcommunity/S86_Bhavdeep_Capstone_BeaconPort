@@ -8,8 +8,6 @@ module.exports = {
     try {
       const { studentId, date, status, classId, notes } = req.body;
       const schoolId = req.user.schoolId;
-
-      // Validate required fields
       if (!studentId || !date || !status || !classId) {
         return res.status(400).json({ 
           success: false, 

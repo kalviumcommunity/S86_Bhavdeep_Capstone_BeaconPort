@@ -37,7 +37,7 @@ registerStudent: async (req, res) => {
       const photo = files.image[0];
       let filepath = photo.filepath;
 
-      // Generate unique filename
+      
       const timestamp = Date.now();
       const fileExtension = path.extname(photo.originalFilename);
       const originalName = path
@@ -45,7 +45,7 @@ registerStudent: async (req, res) => {
         .replace(/\s+/g, "_");
       const uniqueFilename = `${originalName}_${timestamp}${fileExtension}`;
 
-      // Save to backend uploads directory
+      
       let newPath = path.join(__dirname, "../uploads/student/", uniqueFilename);
       const dir = path.dirname(newPath);
       if (!fs.existsSync(dir)) {
@@ -65,7 +65,7 @@ registerStudent: async (req, res) => {
         parent: fields.parent[0],
         parentNum: fields.parentNum[0],
         studentImg: uniqueFilename,
-        password: fields.password[0], // stored as plain-text as per your instruction
+        password: fields.password[0], 
       });
 
       const savedStudent = await newStudent.save();
@@ -228,25 +228,25 @@ registerStudent: async (req, res) => {
             .json({ success: false, message: "Student not found" });
         }
 
-        // Update fields from form data (take first element if array)
+        
         Object.keys(fields).forEach((field) => {
           student[field] = Array.isArray(fields[field])
             ? fields[field][0]
             : fields[field];
         });
 
-        // Handle image update if provided
+        
         if (files.image && files.image[0]) {
           const photo = files.image[0];
           let filepath = photo.filepath;
 
-          // Generate unique filename
+          
           const timestamp = Date.now();
           const fileExtension = path.extname(photo.originalFilename);
           const originalName = path.basename(photo.originalFilename, fileExtension).replace(/\s+/g, "_");
           const uniqueFilename = `${originalName}_${timestamp}${fileExtension}`;
 
-          // Delete old image if exists
+          
           if (student.studentImg) {
             let oldImagePath = path.join(
               __dirname,
@@ -264,7 +264,7 @@ registerStudent: async (req, res) => {
             uniqueFilename
           );
 
-          // Create directory if it doesn't exist
+          
           const dir = path.dirname(newPath);
           if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
@@ -273,7 +273,7 @@ registerStudent: async (req, res) => {
           let photoData = fs.readFileSync(filepath);
           fs.writeFileSync(newPath, photoData);
 
-          student.studentImg = uniqueFilename; // Update the filename
+          student.studentImg = uniqueFilename; 
         }
 
         await student.save();
