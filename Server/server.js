@@ -96,6 +96,11 @@ app.use("/api/attendance", attendanceRouter);
 app.use("/api/examination", examinationRouter);
 app.use("/api/notice", noticeRouter);
 
+
+app.get('/', (req,res) => {
+    res.send("Hello! Welcome to School Management System")
+})
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
