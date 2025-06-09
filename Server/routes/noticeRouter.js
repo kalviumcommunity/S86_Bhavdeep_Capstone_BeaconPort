@@ -22,7 +22,6 @@ router.get("/audience/:audience", authMiddleware(["SCHOOL", "TEACHER", "STUDENT"
 router.get("/:id", authMiddleware(["SCHOOL", "TEACHER", "STUDENT"]), getNoticeById);
 
 router.post("/create", authMiddleware(["SCHOOL", "TEACHER"]), createNotice);
-router.put("/:id", authMiddleware(["SCHOOL", "TEACHER"]), updateNoticeWithId);
 router.delete("/:id", authMiddleware(["SCHOOL", "TEACHER"]), deleteNoticeWithId);
 router.post("/batch-delete", authMiddleware(["SCHOOL", "TEACHER"]), batchDeleteNotices);
 

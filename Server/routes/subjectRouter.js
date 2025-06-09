@@ -6,7 +6,6 @@ const router = express.Router();
 
 router.post('/create',authMiddleware(['SCHOOL']), createSubject);
 router.get('/all', authMiddleware(['SCHOOL', 'TEACHER', 'STUDENT']), getAllSubjects);
-router.put('/update/:id', authMiddleware(['SCHOOL']), updateSubjectwithId); 
 router.delete('/delete/:id', authMiddleware(['SCHOOL']), deleteSubjectwithId); 
 
 module.exports = router;
