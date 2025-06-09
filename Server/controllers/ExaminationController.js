@@ -283,7 +283,169 @@ module.exports = {
     }
   },
 
+  updateExaminationWithId: async (req, res) => {
+    try {
+      const { role, schoolId, id } = req.user;
+      const examId = req.params.id;
+      const { date, subjectId, examType, startTime, endTime, duration } = req.body;
 
+      if (!examId) {
+        return res.status(400).json({
+          success: false,
+          message: "Examination ID is required"
+        });
+      }
+
+      
+      const examination = await Examination.findOne({ 
+        _id: examId, 
+        school: schoolId 
+      });
+
+      if (!examination) {
+        return res.status(404).json({
+          success: false,
+          message: "Examination not found"
+        });
+      }
+
+      
+      if (role === 'TEACHER') {
+        
+        if (examination.createdBy.toString() !== id || examination.creatorRole !== 'TEACHER') {
+          return res.status(403).json({
+            success: false,
+            message: "You can only edit examinations that you created"
+          });
+        }
+        
+        
+        if (examType && SCHOOL_ONLY_EXAM_TYPES.includes(examType)) {
+          return res.status(403).json({
+            success: false,
+            message: `Teachers cannot set exam type to ${examType}`
+          });
+        }
+
+        
+        if (subjectId) {
+          const teacher = await Teacher.findById(id)
+            .populate('subjects')
+            .populate('teacherClasses');
+          
+          if (!teacher) {
+            return res.status(404).json({
+              success: false,
+              message: "Teacher not found"
+            });
+          }
+          
+          const currentSubjectId = subjectId || examination.subject.toString();
+          const currentClassId = examination.class.toString();
+
+          const hasSubject = teacher.subjects.some(subject => subject._id.toString() === currentSubjectId);
+          const hasClass = teacher.teacherClasses.some(cls => cls._id.toString() === currentClassId);
+
+          if (!hasSubject) {
+            return res.status(403).json({
+              success: false,
+              message: "You can only update exams for subjects assigned to you"
+            });
+          }
+
+          if (!hasClass) {
+            return res.status(403).json({
+              success: false,
+              message: "You can only update exams for classes assigned to you"
+            });
+          }
+        }
+      }
+
+      
+      if (date) {
+        const examDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (examDate < today) {
+          return res.status(400).json({
+            success: false,
+            message: "Exam date cannot be in the past"
+          });
+        }
+      }
+
+      
+      let calculatedDuration;
+      if (startTime && endTime) {
+        calculatedDuration = calculateExamDuration(startTime, endTime);
+        if (calculatedDuration.error) {
+          return res.status(400).json({
+            success: false,
+            message: calculatedDuration.error
+          });
+        }
+      }
+
+      
+      if (date || startTime || endTime) {
+        const conflictQuery = {
+          school: schoolId,
+          class: examination.class,
+          _id: { $ne: examId },
+          examDate: new Date(date || examination.examDate)
+        };
+
+        if (startTime && endTime) {
+          conflictQuery.$or = [{
+            startTime: { $lte: endTime },
+            endTime: { $gte: startTime }
+          }];
+        }
+
+        const existingExam = await Examination.findOne(conflictQuery);
+        if (existingExam) {
+          return res.status(400).json({
+            success: false,
+            message: "Another exam is already scheduled at this time for this class"
+          });
+        }
+      }
+
+      const updateData = {};
+      if (date) updateData.examDate = new Date(date);
+      if (subjectId) updateData.subject = subjectId;
+      if (examType) updateData.examType = examType;
+      if (startTime) updateData.startTime = startTime;
+      if (endTime) updateData.endTime = endTime;
+      if (duration) updateData.duration = duration;
+      else if (calculatedDuration) updateData.duration = calculatedDuration.duration;
+      
+      updateData.updatedAt = new Date();
+
+      const updatedExam = await Examination.findByIdAndUpdate(
+        examId, 
+        { $set: updateData },
+        { new: true }
+      ).populate('subject', 'subjectName')
+       .populate('class', 'classText')
+       .populate('createdBy', 'name schoolName');
+
+      res.status(200).json({ 
+        success: true, 
+        message: "Examination details updated successfully",
+        data: updatedExam
+      });
+    } catch (error) {
+      console.error("Update examination error:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Internal Server Error",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  },
 
   deleteExaminationWithId: async (req, res) => {
     try {

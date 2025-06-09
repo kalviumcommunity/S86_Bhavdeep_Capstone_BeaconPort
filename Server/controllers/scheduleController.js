@@ -150,6 +150,103 @@ module.exports = {
     }
   },
 
+  updateScheduleWithId: async (req, res) => {
+    try {
+      let id = req.params.id;
+      const schoolId = req.user.schoolId;
+      const { startTime, endTime, date, status, ...otherData } = req.body;
+      
+      
+      const existingSchedule = await Schedule.findOne({ 
+        _id: id, 
+        school: schoolId 
+      });
+      
+      if (!existingSchedule) {
+        return res.status(404).json({
+          success: false,
+          message: "Schedule not found or you don't have permission to update it"
+        });
+      }
+      
+      
+      if (existingSchedule.status === 'completed') {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot update a completed schedule"
+        });
+      }
+      
+      let updateData = { ...otherData };
+      
+      
+      if (status && ['active', 'cancelled'].includes(status)) {
+        updateData.status = status;
+      }
+      
+      
+      if (date && startTime) {
+        try {
+          const formattedStartTime = new Date(`${date}T${startTime}`);
+          if (!isNaN(formattedStartTime.getTime())) {
+            updateData.startTime = formattedStartTime;
+          }
+        } catch (error) {
+          console.error("Error parsing start time:", error);
+          return res.status(400).json({
+            success: false,
+            message: "Invalid start time format"
+          });
+        }
+      }
+      
+      if (date && endTime) {
+        try {
+          const formattedEndTime = new Date(`${date}T${endTime}`);
+          if (!isNaN(formattedEndTime.getTime())) {
+            updateData.endTime = formattedEndTime;
+          }
+        } catch (error) {
+          console.error("Error parsing end time:", error);
+          return res.status(400).json({
+            success: false,
+            message: "Invalid end time format"
+          });
+        }
+      }
+      
+      
+      const finalStartTime = updateData.startTime || existingSchedule.startTime;
+      const finalEndTime = updateData.endTime || existingSchedule.endTime;
+      
+      if (finalStartTime >= finalEndTime) {
+        return res.status(400).json({
+          success: false,
+          message: "End time must be after start time"
+        });
+      }
+      
+      await Schedule.findOneAndUpdate(
+        { _id: id, school: schoolId }, 
+        { $set: updateData }
+      );
+      
+      const scheduleAfterUpdate = await Schedule.findOne({ _id: id })
+        .populate('teacher', 'name')
+        .populate('subject', 'subjectName');
+        
+      res.status(200).json({
+        success: true,
+        message: "Schedule updated",
+        data: scheduleAfterUpdate,
+      });
+    } catch (err) {
+      console.error("Error updating schedule:", err);
+      res
+        .status(500)
+        .json({ success: false, message: "Server Error in Schedule Updating" });
+    }
+  },
 
   deleteScheduleWithId: async (req, res) => {
     try {
