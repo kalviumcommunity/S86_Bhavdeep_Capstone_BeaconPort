@@ -334,6 +334,137 @@ module.exports = {
     }
   },
 
+  updateNoticeWithId: async (req, res) => {
+    try {
+      const schoolId = req.user.schoolId;
+      const userId = req.user._id || req.user.id;
+      const noticeId = req.params.id;
+      const { title, message, audience, isImportant, expiryDate } = req.body;
+
+      console.log("Update request - User:", {
+        userId: userId,
+        role: req.user.role,
+        schoolId: schoolId
+      });
+
+      if (!noticeId) {
+        return res.status(400).json({
+          success: false,
+          message: "Notice ID is required",
+        });
+      }
+
+      const existingNotice = await Notice.findOne({ 
+        _id: noticeId, 
+        school: schoolId 
+      }).populate("createdBy", "_id role");
+
+      if (!existingNotice) {
+        return res.status(404).json({
+          success: false,
+          message: "Notice not found",
+        });
+      }
+
+      console.log("Existing notice:", {
+        id: existingNotice._id,
+        createdBy: existingNotice.createdBy,
+        audience: existingNotice.audience
+      });
+
+      
+      if (req.user.role === "TEACHER") {
+        let createdById;
+        if (existingNotice.createdBy && typeof existingNotice.createdBy === 'object') {
+          createdById = existingNotice.createdBy._id?.toString();
+        } else {
+          createdById = existingNotice.createdBy?.toString();
+        }
+
+        console.log("Permission check:", {
+          createdById: createdById,
+          currentUserId: userId.toString(),
+          existingAudience: existingNotice.audience,
+          newAudience: audience
+        });
+
+        
+        if (createdById !== userId.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: "Teachers can only modify notices they created",
+          });
+        }
+
+        
+        if (existingNotice.audience !== "Student") {
+          return res.status(403).json({
+            success: false,
+            message: "Teachers can only modify student notices",
+          });
+        }
+
+        
+        if (audience && audience !== "Student") {
+          return res.status(403).json({
+            success: false,
+            message: "Teachers can only create/modify notices for students",
+          });
+        }
+      }
+
+      const updateData = {
+        title: title || existingNotice.title,
+        message: message || existingNotice.message,
+        audience: audience || existingNotice.audience,
+        isImportant: isImportant !== undefined ? isImportant : existingNotice.isImportant,
+        updatedAt: new Date(),
+      };
+
+      if (expiryDate !== undefined) {
+        updateData.expiryDate = expiryDate;
+      }
+
+      console.log("Update data:", updateData);
+
+      const updatedNotice = await Notice.findOneAndUpdate(
+        { _id: noticeId, school: schoolId },
+        { $set: updateData },
+        { new: true, runValidators: true }
+      ).populate("school", "name location")
+       .populate("createdBy", "name role");
+
+      if (!updatedNotice) {
+        return res.status(404).json({
+          success: false,
+          message: "Notice not found or update failed",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Notice details updated",
+        data: updatedNotice,
+      });
+    } catch (error) {
+      console.error("Update notice error:", error);
+      
+      if (error.name === 'ValidationError') {
+        const validationErrors = Object.values(error.errors).map(err => err.message);
+        return res.status(400).json({ 
+          success: false,
+          message: "Validation failed",
+          errors: validationErrors
+        });
+      }
+      
+      res.status(500).json({ 
+        success: false,
+        message: "Internal Server Error" 
+      });
+    }
+  },
+
   deleteNoticeWithId: async (req, res) => {
     try {
       const schoolId = req.user.schoolId;

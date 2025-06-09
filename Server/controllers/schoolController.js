@@ -778,6 +778,126 @@ module.exports = {
   },
 
 
+updateSchool: async (req, res) => {
+  let tempFilePath = null;
+
+  try {
+    const id = req.user.id;
+
+    const form = new formidable.IncomingForm({
+      maxFileSize: 10 * 1024 * 1024, 
+      allowEmptyFiles: true,
+      filter: ({ name, originalFilename, mimetype }) => {
+        if (name === 'image' && originalFilename) {
+          return mimetype && mimetype.includes('image');
+        }
+        return true;
+      },
+    });
+
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        return res.status(400).json({
+          success: false,
+          message: "Form parsing error: " + err.message
+        });
+      }
+
+      try {
+        const school = await School.findOne({ _id: id });
+
+        if (!school) {
+          return res.status(404).json({
+            success: false,
+            message: "School not found"
+          });
+        }
+
+        
+        const allowedFields = ['schoolName', 'ownerName', 'email'];
+        allowedFields.forEach((field) => {
+          if (fields[field] && fields[field][0]) {
+            school[field] = fields[field][0].trim();
+          }
+        });
+
+        
+        if (files.image && files.image[0]) {
+          const photo = files.image[0];
+          tempFilePath = photo.filepath;
+
+          
+          if (!photo.mimetype || !photo.mimetype.startsWith('image/')) {
+            cleanupTempFile(tempFilePath);
+            return res.status(400).json({
+              success: false,
+              message: "Please upload a valid image file"
+            });
+          }
+
+          
+          const uploadResult = await uploadToCloudinary(photo.filepath, 'school_management/schools/updated');
+
+          if (!uploadResult.success) {
+            cleanupTempFile(tempFilePath);
+            return res.status(500).json({
+              success: false,
+              message: "Failed to upload new image to cloud storage",
+              error: uploadResult.error,
+            });
+          }
+
+          
+          if (school.schoolImgPublicId) {
+            await deleteFromCloudinary(school.schoolImgPublicId);
+          }
+
+          
+          cleanupTempFile(tempFilePath);
+
+          
+          school.schoolImg = uploadResult.url;
+          school.schoolImgPublicId = uploadResult.public_id;
+        }
+
+        await school.save();
+
+        
+        const updatedSchool = school.toObject();
+        delete updatedSchool.password;
+        delete updatedSchool.resetPasswordToken;
+        delete updatedSchool.resetPasswordExpires;
+        delete updatedSchool.__v;
+
+        res.status(200).json({
+          success: true,
+          message: "School data updated successfully",
+          school: updatedSchool,
+        });
+
+      } catch (innerError) {
+        cleanupTempFile(tempFilePath);
+        console.error("Inner update error:", innerError);
+
+        if (innerError.code === 11000) {
+          return res.status(400).json({
+            success: false,
+            message: "Email already exists"
+          });
+        }
+
+        throw innerError;
+      }
+    });
+  } catch (error) {
+    cleanupTempFile(tempFilePath);
+    console.error("Update school error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+},
 
 
 deleteSchool: async (req, res) => {

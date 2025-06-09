@@ -254,6 +254,131 @@ registerTeacher: async (req, res) => {
     }
   },
 
+  updateTeacher: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const schoolId = req.user.schoolId;
+      const form = new formidable.IncomingForm();
+
+      form.parse(req, async (err, fields, files) => {
+        if (err) {
+          return res
+            .status(400)
+            .json({ success: false, message: "Form parsing error" });
+        }
+
+        const teacher = await Teacher.findOne({ _id: id, school: schoolId });
+
+        if (!teacher) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Teacher not found" });
+        }
+
+      
+        Object.keys(fields).forEach((field) => {
+        
+          if (
+            field !== "teacherClasses" &&
+            field !== "subjects" // password handled separately below
+          ) {
+            teacher[field] = Array.isArray(fields[field])
+              ? fields[field][0]
+              : fields[field];
+          }
+        });
+
+      
+        if (fields.teacherClasses && fields.teacherClasses[0]) {
+          try {
+            teacher.teacherClasses = JSON.parse(fields.teacherClasses[0]);
+          } catch (e) {
+            console.error("Error parsing teacherClasses:", e);
+          }
+        }
+
+      
+        if (fields.subjects && fields.subjects[0]) {
+          try {
+            teacher.subjects = JSON.parse(fields.subjects[0]);
+          } catch (e) {
+            console.error("Error parsing subjects:", e);
+          }
+        } else if (fields.subject && fields.subject[0]) {
+        
+          try {
+            teacher.subjects = JSON.parse(fields.subject[0]);
+          } catch (e) {
+            teacher.subjects = [fields.subject[0]];
+          }
+        }
+
+      
+        if (fields.password && fields.password[0]) {
+          teacher.password = fields.password[0];
+        }
+
+      
+        if (files.image && files.image[0]) {
+          const photo = files.image[0];
+          let filepath = photo.filepath;
+          let originalFilename = photo.originalFilename.replace(/\s+/g, "_");
+
+        
+          if (teacher.teacherImg) {
+            let oldImagePath = path.join(
+              __dirname,
+              "../uploads/teacher/",
+              teacher.teacherImg
+            );
+            if (fs.existsSync(oldImagePath)) {
+              fs.unlinkSync(oldImagePath);
+            }
+          }
+
+        
+          const timestamp = Date.now();
+          const fileExtension = path.extname(photo.originalFilename);
+          const originalName = path
+            .basename(photo.originalFilename, fileExtension)
+            .replace(/\s+/g, "_");
+          const uniqueFilename = `${originalName}_${timestamp}${fileExtension}`;
+
+          let newPath = path.join(__dirname, "../uploads/teacher/", uniqueFilename);
+
+        
+          const dir = path.dirname(newPath);
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
+
+          let photoData = fs.readFileSync(filepath);
+          fs.writeFileSync(newPath, photoData);
+
+          teacher.teacherImg = uniqueFilename;
+        }
+
+        await teacher.save();
+
+      
+        const updatedTeacher = await Teacher.findById(teacher._id)
+          .populate("teacherClasses")
+          .populate("subjects")
+          .select("-password");
+
+        res.status(200).json({
+          success: true,
+          message: "Teacher data Updated",
+          teacher: updatedTeacher,
+        });
+      });
+    } catch (error) {
+      console.error("Update Teacher error:", error);
+      res
+        .status(500)
+        .json({ success: false, message: "Internal Server Error" });
+    }
+  },
 
   deleteTeacherWithId: async (req, res) => {
     try {

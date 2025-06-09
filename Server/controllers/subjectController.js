@@ -37,6 +37,25 @@ module.exports = {
     }
   },
 
+  updateSubjectwithId: async (req, res) => {
+    try {
+      let id = req.params.id;
+      await Subject.findOneAndUpdate({ _id: id }, { $set: { ...req.body } });
+      const SubjectAfterUpdate = await Subject.findOne({ _id: id });
+      res
+        .status(200)
+        .json({
+          success: true,
+          message: "Subject updated.",
+          data: SubjectAfterUpdate,
+        });
+    } catch (err) {
+      res
+        .status(500)
+        .json({ success: false, message: "Server Error in Subject Updating" });
+      console.log(err);
+    }
+  },
 
   deleteSubjectwithId: async (req, res) => {
     try {

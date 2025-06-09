@@ -24,6 +24,7 @@ router.post('/reset-password', resetPassword);
 
 router.get('/verify-reset-token/:token', verifyResetToken);
 router.get('/all', getAllSchools);
+router.put('/update', authMiddleware(['SCHOOL']), updateSchool);
 router.get('/fetch-single', authMiddleware(['SCHOOL']), getSchoolOwnData);
 
 module.exports = router;
