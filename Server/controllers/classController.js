@@ -134,63 +134,7 @@ module.exports = {
     }
   },
 
-  updateClassWithId: async (req, res) => {
-    try {
-      const id = req.params.id;
-      const schoolId = req.user.schoolId;
-      
-      
-      const existingClass = await Class.findOne({ _id: id, school: schoolId });
-      
-      if (!existingClass) {
-        return res.status(404).json({
-          success: false,
-          message: "Class not found or access denied"
-        });
-      }
 
-      
-      if (req.body.attendee) {
-        const teacherExists = await Teacher.exists({ 
-          _id: req.body.attendee, 
-          school: schoolId 
-        });
-        
-        if (!teacherExists) {
-          return res.status(400).json({
-            success: false,
-            message: "Invalid teacher ID provided"
-          });
-        }
-      }
-      
-      
-      await Class.findOneAndUpdate(
-        { _id: id, school: schoolId }, 
-        { $set: req.body },
-        { new: false, runValidators: true }
-      );
-      
-      
-      const classAfterUpdate = await Class.findOne({ 
-        _id: id, 
-        school: schoolId 
-      }).populate("attendee", "name email");
-      
-      res.status(200).json({
-        success: true,
-        message: "Class updated successfully",
-        data: classAfterUpdate,
-      });
-    } catch (err) {
-      console.error("Error updating class:", err);
-      res.status(500).json({ 
-        success: false, 
-        message: "Server Error in class updating", 
-        error: err.message 
-      });
-    }
-  },
 
   deleteClassWithId: async (req, res) => {
     try {
