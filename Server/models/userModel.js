@@ -47,12 +47,22 @@ const userSchema = new mongoose.Schema({
         default: Date.now
     }
 }, {
-    timestamps: true 
+    timestamps: true, 
+    toJSON: { 
+        virtuals: true,
+        transform: function(doc, ret) {
+            
+            delete ret.password;
+            return ret;
+        }
+    },
+    toObject: { virtuals: true }
 });
 
 
 userSchema.index({ email: 1 });
 userSchema.index({ schoolId: 1, role: 1 });
+userSchema.index({ schoolId: 1, isActive: 1 });
 
 
 userSchema.pre('save', function(next) {

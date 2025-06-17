@@ -2,9 +2,21 @@ const Examination = require("../models/examinationModel");
 const Teacher = require("../models/teacherModel");
 const Student = require("../models/studentModel");
 
+// Define exam types that only schools can create
+const SCHOOL_ONLY_EXAM_TYPES = ['Mid Term', 'Unit Test','Final Term', 'Annual Exam', 'Semester Exam'];
+const TEACHER_ALLOWED_EXAM_TYPES = ['Quiz', 'Class Test', 'Weekly Test', 'Slip Test'];
 
-const SCHOOL_ONLY_EXAM_TYPES = ['Mid Term', 'Final Term', 'Annual Exam', 'Semester Exam'];
-const TEACHER_ALLOWED_EXAM_TYPES = ['Quiz', 'Class Test', 'Pop Quiz', 'Unit Test', 'Weekly Test', 'Slip Test'];
+// Helper function to check if exam is completed
+function isExamCompleted(examDate, endTime) {
+  const now = new Date();
+  const examEndDateTime = new Date(examDate);
+  
+  // Parse endTime (HH:MM format) and set it on the exam date
+  const [hours, minutes] = endTime.split(':').map(Number);
+  examEndDateTime.setHours(hours, minutes, 0, 0);
+  
+  return now > examEndDateTime;
+}
 
 module.exports = {
   createExamination: async (req, res) => {
@@ -12,7 +24,7 @@ module.exports = {
       const { role, schoolId, id } = req.user;
       const { date, subjectId, examType, classId, startTime, endTime, duration } = req.body;
       
-      
+      // Validate required fields
       if (!date || !subjectId || !examType || !classId || !startTime || !endTime) {
         return res.status(400).json({
           success: false,
@@ -20,15 +32,15 @@ module.exports = {
         });
       }
 
-      
+      // Validate exam type based on user role
       if (role === 'TEACHER' && SCHOOL_ONLY_EXAM_TYPES.includes(examType)) {
         return res.status(403).json({
           success: false,
-          message: `Teachers cannot create ${examType} exams. Only Quiz, Class Test, Pop Quiz, Unit Test, Weekly Test, and Slip Test are allowed.`
+          message: `Teachers cannot create ${examType} exams. Only Quiz, Class Test, Weekly Test, and Slip Test are allowed.`
         });
       }
 
-      
+      // Validate exam date is not in the past
       const examDate = new Date(date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -40,7 +52,7 @@ module.exports = {
         });
       }
 
-      
+      // Validate time format and calculate duration
       const calculatedDuration = calculateExamDuration(startTime, endTime);
       if (calculatedDuration.error) {
         return res.status(400).json({
@@ -49,7 +61,7 @@ module.exports = {
         });
       }
 
-      
+      // If teacher, validate they can teach this subject and class
       if (role === 'TEACHER') {
         const teacher = await Teacher.findById(id)
           .populate('subjects')
@@ -62,7 +74,7 @@ module.exports = {
           });
         }
 
-        
+        // Check if teacher is assigned to this subject
         const hasSubject = teacher.subjects.some(subject => subject._id.toString() === subjectId);
         if (!hasSubject) {
           return res.status(403).json({
@@ -71,7 +83,7 @@ module.exports = {
           });
         }
 
-        
+        // Check if teacher is assigned to this class
         const hasClass = teacher.teacherClasses.some(cls => cls._id.toString() === classId);
         if (!hasClass) {
           return res.status(403).json({
@@ -81,7 +93,7 @@ module.exports = {
         }
       }
 
-      
+      // Check for existing exam conflicts
       const existingExam = await Examination.findOne({
         school: schoolId,
         class: classId,
@@ -101,7 +113,7 @@ module.exports = {
         });
       }
       
-      
+      // Set creator information based on role
       let createdBy, createdByModel;
       if (role === 'SCHOOL') {
         createdBy = schoolId;
@@ -127,7 +139,7 @@ module.exports = {
 
       await newExamination.save();
       
-      
+      // Populate the saved examination for response
       const populatedExam = await Examination.findById(newExamination._id)
         .populate('subject', 'subjectName')
         .populate('class', 'classText')
@@ -153,7 +165,7 @@ module.exports = {
       const { role, schoolId, id } = req.user;
       let query = { school: schoolId };
       
-      
+      // If teacher, show exams for their assigned classes
       if (role === 'TEACHER') {
         const teacher = await Teacher.findById(id).populate('teacherClasses');
         
@@ -172,7 +184,7 @@ module.exports = {
         };
       }
       
-      
+      // If student, show only exams for their class
       if (role === 'STUDENT') {
         const student = await Student.findById(id);
         if (!student) {
@@ -188,16 +200,21 @@ module.exports = {
         };
       }
       
-      const examinations = await Examination.find(query)
+      const allExaminations = await Examination.find(query)
         .populate('subject', 'subjectName')
         .populate('class', 'classText')
         .populate('createdBy', 'name schoolName')
         .sort({ examDate: 1, startTime: 1 });
 
+      // Filter out completed exams
+      const activeExaminations = allExaminations.filter(exam => 
+        !isExamCompleted(exam.examDate, exam.endTime)
+      );
+
       res.status(200).json({ 
         success: true, 
-        data: examinations,
-        count: examinations.length
+        data: activeExaminations,
+        count: activeExaminations.length
       });
     } catch (error) {
       console.error("Get all examinations error:", error);
@@ -223,7 +240,7 @@ module.exports = {
 
       let query = { school: schoolId, class: classId };
       
-      
+      // Additional validation for students - they can only see exams for their own class
       if (role === 'STUDENT') {
         const student = await Student.findById(id);
         if (!student) {
@@ -241,7 +258,7 @@ module.exports = {
         }
       }
       
-      
+      // Additional validation for teachers - they can only see exams for their assigned classes
       if (role === 'TEACHER') {
         const teacher = await Teacher.findById(id).populate('teacherClasses');
         
@@ -262,16 +279,21 @@ module.exports = {
         }
       }
       
-      const classExaminations = await Examination.find(query)
+      const allClassExaminations = await Examination.find(query)
         .populate('subject', 'subjectName')
         .populate('class', 'classText')
         .populate('createdBy', 'name schoolName')
         .sort({ examDate: 1, startTime: 1 });
+
+      // Filter out completed exams
+      const activeClassExaminations = allClassExaminations.filter(exam => 
+        !isExamCompleted(exam.examDate, exam.endTime)
+      );
         
       res.status(200).json({ 
         success: true, 
-        data: classExaminations,
-        count: classExaminations.length
+        data: activeClassExaminations,
+        count: activeClassExaminations.length
       });
     } catch (error) {
       console.error("Get examinations by class error:", error);
@@ -296,7 +318,7 @@ module.exports = {
         });
       }
 
-      
+      // Find the examination first to check permissions
       const examination = await Examination.findOne({ 
         _id: examId, 
         school: schoolId 
@@ -309,9 +331,17 @@ module.exports = {
         });
       }
 
-      
+      // Check if exam is already completed
+      if (isExamCompleted(examination.examDate, examination.endTime)) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot update a completed examination"
+        });
+      }
+
+      // Check permissions - Fixed the permission logic
       if (role === 'TEACHER') {
-        
+        // Teachers can only edit exams they created
         if (examination.createdBy.toString() !== id || examination.creatorRole !== 'TEACHER') {
           return res.status(403).json({
             success: false,
@@ -319,7 +349,7 @@ module.exports = {
           });
         }
         
-        
+        // Teachers cannot change exam type to school-only types
         if (examType && SCHOOL_ONLY_EXAM_TYPES.includes(examType)) {
           return res.status(403).json({
             success: false,
@@ -327,7 +357,7 @@ module.exports = {
           });
         }
 
-        
+        // Validate teacher can still teach this subject and class
         if (subjectId) {
           const teacher = await Teacher.findById(id)
             .populate('subjects')
@@ -362,7 +392,7 @@ module.exports = {
         }
       }
 
-      
+      // Validate exam date if provided
       if (date) {
         const examDate = new Date(date);
         const today = new Date();
@@ -376,7 +406,7 @@ module.exports = {
         }
       }
 
-      
+      // Validate time and calculate duration if time fields are provided
       let calculatedDuration;
       if (startTime && endTime) {
         calculatedDuration = calculateExamDuration(startTime, endTime);
@@ -388,7 +418,7 @@ module.exports = {
         }
       }
 
-      
+      // Check for conflicts if date or time is being changed
       if (date || startTime || endTime) {
         const conflictQuery = {
           school: schoolId,
@@ -459,7 +489,7 @@ module.exports = {
         });
       }
 
-      
+      // Find the examination first to check permissions
       const examination = await Examination.findOne({ 
         _id: examId, 
         school: schoolId 
@@ -472,9 +502,17 @@ module.exports = {
         });
       }
 
-      
+      // Check if exam is already completed
+      if (isExamCompleted(examination.examDate, examination.endTime)) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot delete a completed examination"
+        });
+      }
+
+      // Check permissions
       if (role === 'TEACHER') {
-        
+        // Teachers can only delete exams they created
         if (examination.createdBy.toString() !== id || examination.creatorRole !== 'TEACHER') {
           return res.status(403).json({
             success: false,
@@ -533,7 +571,7 @@ module.exports = {
     }
   },
 
-  
+  // Get available exam types based on user role
   getAvailableExamTypes: async (req, res) => {
     try {
       const { role } = req.user;
@@ -562,31 +600,31 @@ module.exports = {
   }
 };
 
-
+// Helper function to calculate exam duration
 function calculateExamDuration(startTime, endTime) {
   try {
-    
+    // Validate time format (HH:MM)
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
       return { error: "Invalid time format. Please use HH:MM format" };
     }
 
-    
+    // Parse the times and calculate duration in minutes
     const start = new Date(`1970-01-01T${startTime}:00`);
     const end = new Date(`1970-01-01T${endTime}:00`);
     
-    
+    // Check if end time is after start time
     if (end <= start) {
       return { error: "End time must be after start time" };
     }
     
-    
+    // Calculate the difference in milliseconds
     const diffMs = end - start;
     
-    
+    // Convert to minutes
     const durationMinutes = Math.round(diffMs / 60000);
     
-    
+    // Validate reasonable duration (between 15 minutes and 8 hours)
     if (durationMinutes < 15 || durationMinutes > 480) {
       return { error: "Exam duration must be between 15 minutes and 8 hours" };
     }

@@ -2,7 +2,7 @@ const Class = require("../models/classModel");
 const Student = require("../models/studentModel");
 const Exam = require("../models/examinationModel");
 const Schedule = require("../models/scheduleModel");
-const Teacher = require("../models/teacherModel"); 
+const Teacher = require("../models/teacherModel"); // Assuming we need this for teacher lookups
 
 module.exports = {
   getAllClasses: async (req, res) => {
@@ -29,11 +29,11 @@ module.exports = {
       const schoolId = req.user.schoolId;
       const classId = req.params.id;
 
-      
+      // Make sure the class exists and belongs to the school
       const selectedClass = await Class.findOne({ 
         school: schoolId, 
         _id: classId 
-      }).populate("attendee", "name email"); 
+      }).populate("attendee", "name email"); // Only populate necessary fields
 
       if (selectedClass) {
         return res.status(200).json({ 
@@ -61,7 +61,7 @@ module.exports = {
       const schoolId = req.user.schoolId;
       const attendeeId = req.params.id;
 
-      
+      // Make sure the class exists and belongs to the school
       const selectedClass = await Class.find({ 
         school: schoolId, 
         attendee: req.user.id 
@@ -90,7 +90,7 @@ module.exports = {
 
   createClass: async (req, res) => {
     try {
-      
+      // Validate required fields
       if (!req.body.classText || !req.body.classNum) {
         return res.status(400).json({
           success: false,
@@ -98,7 +98,7 @@ module.exports = {
         });
       }
 
-      
+      // Check if a class with the same number already exists in this school
       const existingClass = await Class.findOne({
         school: req.user.schoolId,
         classNum: req.body.classNum
@@ -139,7 +139,7 @@ module.exports = {
       const id = req.params.id;
       const schoolId = req.user.schoolId;
       
-      
+      // Check if the class exists and belongs to the school
       const existingClass = await Class.findOne({ _id: id, school: schoolId });
       
       if (!existingClass) {
@@ -149,7 +149,7 @@ module.exports = {
         });
       }
 
-      
+      // If updating attendee, verify the teacher exists
       if (req.body.attendee) {
         const teacherExists = await Teacher.exists({ 
           _id: req.body.attendee, 
@@ -164,14 +164,14 @@ module.exports = {
         }
       }
       
-      
+      // Update the class
       await Class.findOneAndUpdate(
         { _id: id, school: schoolId }, 
         { $set: req.body },
         { new: false, runValidators: true }
       );
       
-      
+      // Fetch the updated class
       const classAfterUpdate = await Class.findOne({ 
         _id: id, 
         school: schoolId 
@@ -197,7 +197,7 @@ module.exports = {
       const id = req.params.id;
       const schoolId = req.user.schoolId;
 
-      
+      // Check if the class exists and belongs to the school
       const existingClass = await Class.findOne({ _id: id, school: schoolId });
       
       if (!existingClass) {
@@ -207,7 +207,7 @@ module.exports = {
         });
       }
 
-      
+      // Check if the class is being used anywhere
       const classStudentCount = await Student.countDocuments({ 
         studentClass: id, 
         school: schoolId 
@@ -235,7 +235,7 @@ module.exports = {
         });
       }
 
-      
+      // Delete the class if not in use
       await Class.findOneAndDelete({ _id: id, school: schoolId });
       
       return res.status(200).json({ 

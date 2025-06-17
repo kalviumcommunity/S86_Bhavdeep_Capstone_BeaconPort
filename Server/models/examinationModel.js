@@ -20,9 +20,9 @@ const examinationSchema = new mongoose.Schema({
     required: true,
     enum: [
       
-      'Mid Term', 'Final Term', 'Annual Exam', 'Semester Exam',
+      'Mid Term', 'Final Term', 'Annual Exam','Unit Test','Semester Exam',
       
-      'Quiz', 'Class Test', 'Pop Quiz', 'Unit Test', 'Weekly Test', 'Slip Test'
+      'Quiz', 'Class Test','Weekly Test', 'Slip Test'
     ]
   },
   class: {

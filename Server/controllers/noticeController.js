@@ -1,11 +1,13 @@
 const Notice = require("../models/noticeModel");
-const User = require("../models/userModel");
+const School = require("../models/schoolModel");
+const Teacher = require("../models/teacherModel");
 
 module.exports = {
   createNotice: async (req, res) => {
     try {
       const schoolId = req.user.schoolId;
       const userId = req.user._id || req.user.id;
+      const userRole = req.user.role;
       const { title, message, audience, isImportant, expiryDate } = req.body;
 
       console.log("User from middleware:", {
@@ -28,12 +30,24 @@ module.exports = {
         });
       }
 
-      
-      if (req.user.role === "TEACHER" && audience !== "Student") {
+      // Teachers can only create notices for Students
+      if (userRole === "TEACHER" && audience !== "Student") {
         return res.status(403).json({
           success: false,
           message: "Teachers can only create notices for students",
         });
+      }
+
+      // Get creator name based on role
+      let creatorName;
+      if (userRole === "SCHOOL") {
+        const school = await School.findById(userId);
+        creatorName = school ? school.ownerName : "Unknown School";
+      } else if (userRole === "TEACHER") {
+        const teacher = await Teacher.findById(userId);
+        creatorName = teacher ? teacher.name : "Unknown Teacher";
+      } else {
+        creatorName = "Unknown User";
       }
 
       const noticeData = {
@@ -42,7 +56,9 @@ module.exports = {
         message,
         audience,
         isImportant: isImportant || false,
-        createdBy: userId,
+        creatorRole: userRole,
+        createdBy: creatorName,
+        createdId:userId,
       };
 
       if (expiryDate) {
@@ -53,8 +69,7 @@ module.exports = {
       await newNotice.save();
       
       const populatedNotice = await Notice.findById(newNotice._id)
-        .populate("school", "name location")
-        .populate("createdBy", "name role");
+        .populate("school", "name location");
 
       res.status(201).json({
         success: true,
@@ -89,42 +104,52 @@ module.exports = {
       let filter = { school: schoolId };
       const sort = {};
 
-      
+      // Role-based filtering
       if (userRole === "TEACHER") {
+        // Get teacher name for filtering
+        const teacher = await Teacher.findById(userId);
+        const teacherName = teacher ? teacher.name : "Unknown Teacher";
         
-        
-        
+        // Teachers can see:
+        // 1. Notices they created (for students)
+        // 2. Notices created by school for teachers
         filter.$or = [
           { 
-            createdBy: userId,
-            audience: "Student" 
+            createdBy: teacherName,
+            audience: "Student" // Only their student notices
           },
           { 
-            audience: "Teacher" 
+            audience: "Teacher" // All notices for teachers (created by school)
+          },
+          {
+            audience:"All"
           }
         ];
       } else if (userRole === "STUDENT") {
-        
+        // Students can see notices targeted to them or all
         filter.$or = [
           { audience: "Student" },
           { audience: "All" }
         ];
       }
-      
+      // SCHOOL role can see all notices (no additional filter needed)
 
-      
+      // Apply audience filter if provided
       if (req.query.audience && req.query.audience !== "All") {
         if (userRole === "TEACHER") {
+          const teacher = await Teacher.findById(userId);
+          const teacherName = teacher ? teacher.name : "Unknown Teacher";
           
+          // For teachers, audience filter should work within their permissions
           if (req.query.audience === "Student") {
-            
+            // Only their own student notices
             filter = {
               school: schoolId,
-              createdBy: userId,
+              createdBy: teacherName,
               audience: "Student"
             };
           } else if (req.query.audience === "Teacher") {
-            
+            // Only notices for teachers
             filter = {
               school: schoolId,
               audience: "Teacher"
@@ -139,7 +164,7 @@ module.exports = {
         }
       }
 
-      
+      // Apply search filter if provided
       if (req.query.search) {
         const searchFilter = {
           $or: [
@@ -148,7 +173,7 @@ module.exports = {
           ]
         };
         
-        
+        // Combine with existing filter
         if (filter.$or) {
           filter = {
             $and: [
@@ -162,12 +187,12 @@ module.exports = {
         }
       }
 
-      
+      // Apply importance filter if provided
       if (req.query.important === "true") {
         filter.isImportant = true;
       }
 
-      
+      // Apply date filters if provided
       if (req.query.startDate && req.query.endDate) {
         filter.createdAt = {
           $gte: new Date(req.query.startDate),
@@ -179,14 +204,14 @@ module.exports = {
         filter.createdAt = { $lte: new Date(req.query.endDate) };
       }
 
-      
+      // Apply sorting
       if (req.query.sortBy) {
         sort[req.query.sortBy] = req.query.sortOrder === "asc" ? 1 : -1;
       } else {
         sort.createdAt = -1;
       }
 
-      
+      // Pagination
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
@@ -195,7 +220,6 @@ module.exports = {
 
       const notices = await Notice.find(filter)
         .populate("school", "name location")
-        .populate("createdBy", "name role")
         .sort(sort)
         .skip(skip)
         .limit(limit);
@@ -237,12 +261,15 @@ module.exports = {
 
       let filter = { _id: noticeId, school: schoolId };
 
-      
+      // Role-based filtering
       if (userRole === "TEACHER") {
+        const teacher = await Teacher.findById(userId);
+        const teacherName = teacher ? teacher.name : "Unknown Teacher";
         
+        // Teachers can see notices they created OR notices for teachers
         filter.$or = [
           { 
-            createdBy: userId,
+            createdBy: teacherName,
             audience: "Student"
           },
           { 
@@ -257,8 +284,7 @@ module.exports = {
       }
 
       const notice = await Notice.findOne(filter)
-        .populate("school", "name location")
-        .populate("createdBy", "name role");
+        .populate("school", "name location");
 
       if (!notice) {
         return res.status(404).json({
@@ -267,7 +293,10 @@ module.exports = {
         });
       }
 
-      res.status(200).json({ success: true, data: notice });
+      res.status(200).json({ 
+        success: true, 
+        data: notice 
+      });
     } catch (error) {
       console.error("Get notice by ID error:", error);
       res.status(500).json({ 
@@ -296,14 +325,16 @@ module.exports = {
         audience: audience,
       };
 
-      
+      // Role-based filtering
       if (userRole === "TEACHER") {
         if (audience === "Student") {
-          
-          filter.createdBy = userId;
+          const teacher = await Teacher.findById(userId);
+          const teacherName = teacher ? teacher.name : "Unknown Teacher";
+          // Only their own student notices
+          filter.createdBy = teacherName;
         } else if (audience === "Teacher") {
-          
-          
+          // All notices for teachers
+          // No additional filter needed, just audience: "Teacher"
         } else {
           return res.status(403).json({
             success: false,
@@ -321,10 +352,12 @@ module.exports = {
 
       const notices = await Notice.find(filter)
         .populate("school", "name location")
-        .populate("createdBy", "name role")
         .sort({ createdAt: -1 });
 
-      res.status(200).json({ success: true, data: notices });
+      res.status(200).json({ 
+        success: true, 
+        data: notices 
+      });
     } catch (error) {
       console.error("Get notices by audience error:", error);
       res.status(500).json({ 
@@ -338,12 +371,13 @@ module.exports = {
     try {
       const schoolId = req.user.schoolId;
       const userId = req.user._id || req.user.id;
+      const userRole = req.user.role;
       const noticeId = req.params.id;
       const { title, message, audience, isImportant, expiryDate } = req.body;
 
       console.log("Update request - User:", {
         userId: userId,
-        role: req.user.role,
+        role: userRole,
         schoolId: schoolId
       });
 
@@ -357,7 +391,7 @@ module.exports = {
       const existingNotice = await Notice.findOne({ 
         _id: noticeId, 
         school: schoolId 
-      }).populate("createdBy", "_id role");
+      });
 
       if (!existingNotice) {
         return res.status(404).json({
@@ -372,31 +406,27 @@ module.exports = {
         audience: existingNotice.audience
       });
 
-      
-      if (req.user.role === "TEACHER") {
-        let createdById;
-        if (existingNotice.createdBy && typeof existingNotice.createdBy === 'object') {
-          createdById = existingNotice.createdBy._id?.toString();
-        } else {
-          createdById = existingNotice.createdBy?.toString();
-        }
+      // Check permissions based on user role
+      if (userRole === "TEACHER") {
+        const teacher = await Teacher.findById(userId);
+        const teacherName = teacher ? teacher.name : "Unknown Teacher";
 
         console.log("Permission check:", {
-          createdById: createdById,
-          currentUserId: userId.toString(),
+          createdBy: existingNotice.createdBy,
+          currentTeacherName: teacherName,
           existingAudience: existingNotice.audience,
           newAudience: audience
         });
 
-        
-        if (createdById !== userId.toString()) {
+        // Teachers can only modify notices they created themselves
+        if (existingNotice.createdBy !== teacherName) {
           return res.status(403).json({
             success: false,
             message: "Teachers can only modify notices they created",
           });
         }
 
-        
+        // Ensure the existing notice is for students
         if (existingNotice.audience !== "Student") {
           return res.status(403).json({
             success: false,
@@ -404,7 +434,7 @@ module.exports = {
           });
         }
 
-        
+        // Teachers can only modify notices to be for students
         if (audience && audience !== "Student") {
           return res.status(403).json({
             success: false,
@@ -431,8 +461,7 @@ module.exports = {
         { _id: noticeId, school: schoolId },
         { $set: updateData },
         { new: true, runValidators: true }
-      ).populate("school", "name location")
-       .populate("createdBy", "name role");
+      ).populate("school", "name location");
 
       if (!updatedNotice) {
         return res.status(404).json({
@@ -469,6 +498,7 @@ module.exports = {
     try {
       const schoolId = req.user.schoolId;
       const userId = req.user._id || req.user.id;
+      const userRole = req.user.role;
       const noticeId = req.params.id;
 
       if (!noticeId) {
@@ -481,7 +511,7 @@ module.exports = {
       const existingNotice = await Notice.findOne({ 
         _id: noticeId, 
         school: schoolId 
-      }).populate("createdBy", "_id role");
+      });
 
       if (!existingNotice) {
         return res.status(404).json({
@@ -490,24 +520,20 @@ module.exports = {
         });
       }
 
-      
-      if (req.user.role === "TEACHER") {
-        let createdById;
-        if (existingNotice.createdBy && typeof existingNotice.createdBy === 'object') {
-          createdById = existingNotice.createdBy._id?.toString();
-        } else {
-          createdById = existingNotice.createdBy?.toString();
-        }
+      // Check permissions based on user role
+      if (userRole === "TEACHER") {
+        const teacher = await Teacher.findById(userId);
+        const teacherName = teacher ? teacher.name : "Unknown Teacher";
         
-        
-        if (createdById !== userId.toString()) {
+        // Teachers can only delete notices they created themselves
+        if (existingNotice.createdBy !== teacherName) {
           return res.status(403).json({
             success: false,
             message: "Teachers can only delete notices they created",
           });
         }
 
-        
+        // Ensure it's a student notice
         if (existingNotice.audience !== "Student") {
           return res.status(403).json({
             success: false,
@@ -538,6 +564,7 @@ module.exports = {
     try {
       const schoolId = req.user.schoolId;
       const userId = req.user._id || req.user.id;
+      const userRole = req.user.role;
       const { ids } = req.body;
 
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
@@ -552,8 +579,11 @@ module.exports = {
         school: schoolId,
       };
 
-      if (req.user.role === "TEACHER") {
-        deleteFilter.createdBy = userId;
+      if (userRole === "TEACHER") {
+        const teacher = await Teacher.findById(userId);
+        const teacherName = teacher ? teacher.name : "Unknown Teacher";
+        
+        deleteFilter.createdBy = teacherName;
         deleteFilter.audience = "Student";
       }
 
@@ -584,11 +614,14 @@ module.exports = {
         isImportant: true,
       };
 
-      
+      // Role-based filtering
       if (userRole === "TEACHER") {
+        const teacher = await Teacher.findById(userId);
+        const teacherName = teacher ? teacher.name : "Unknown Teacher";
+        
         filter.$or = [
           { 
-            createdBy: userId,
+            createdBy: teacherName,
             audience: "Student"
           },
           { 
@@ -604,10 +637,12 @@ module.exports = {
 
       const importantNotices = await Notice.find(filter)
         .populate("school", "name location")
-        .populate("createdBy", "name role")
         .sort({ createdAt: -1 });
 
-      res.status(200).json({ success: true, data: importantNotices });
+      res.status(200).json({ 
+        success: true, 
+        data: importantNotices 
+      });
     } catch (error) {
       console.error("Get important notices error:", error);
       res.status(500).json({ 
@@ -629,11 +664,14 @@ module.exports = {
         expiryDate: { $gte: currentDate },
       };
 
-      
+      // Role-based filtering
       if (userRole === "TEACHER") {
+        const teacher = await Teacher.findById(userId);
+        const teacherName = teacher ? teacher.name : "Unknown Teacher";
+        
         filter.$or = [
           { 
-            createdBy: userId,
+            createdBy: teacherName,
             audience: "Student"
           },
           { 
@@ -649,10 +687,12 @@ module.exports = {
 
       const activeNotices = await Notice.find(filter)
         .populate("school", "name location")
-        .populate("createdBy", "name role")
         .sort({ createdAt: -1 });
 
-      res.status(200).json({ success: true, data: activeNotices });
+      res.status(200).json({ 
+        success: true, 
+        data: activeNotices 
+      });
     } catch (error) {
       console.error("Get active notices error:", error);
       res.status(500).json({ 
