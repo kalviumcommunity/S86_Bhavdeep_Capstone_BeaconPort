@@ -66,14 +66,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-gray-100">
-      
+      {/* Navigation */}
       <header className="sticky bg-gray-800 shadow-md top-0 z-50">
         <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center">
             <span className="text-2xl font-bold text-white">Beacon <span className='text-orange-500'>Port</span></span>
           </div>
 
-          
+          {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-8 items-center font-medium text-lg">
             <a
               href="#"
@@ -99,11 +99,11 @@ export default function LandingPage() {
             >
               Contact
             </a>
-            <button onClick={() => navigate('/select-role')} className="px-4 py-2 text-orange-500 hover:text-orange-400 transition-colors cursor-pointer">Login</button>
-            <button onClick={() => navigate('/select-role')} className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors cursor-pointer">Get Started</button>
+            <button onClick={() => navigate('/login')} className="px-4 py-2 text-orange-500 hover:text-orange-400 transition-colors cursor-pointer">Login</button>
+            <button onClick={() => navigate('/register')} className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors cursor-pointer">Get Started</button>
           </div>
 
-          
+          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -114,7 +114,7 @@ export default function LandingPage() {
           </div>
         </nav>
 
-        
+        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden bg-gray-800 shadow-lg">
             <div className="container  text-center mx-auto px-6 py-4 flex flex-col space-y-4">
@@ -151,7 +151,7 @@ export default function LandingPage() {
         )}
       </header>
 
-      
+      {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-orange-600 to-amber-500 text-white py-10">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center">
@@ -185,7 +185,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
+      {/* Features Section */}
       <section id="features" className="py-20 bg-gray-900">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
@@ -207,7 +207,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
+      {/* Why Choose Us */}
       <section className="py-20 bg-gray-800">
         <div className="container mx-auto px-6">
           <div className="flex flex-col lg:flex-row items-center">
@@ -262,7 +262,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
+      {/* CTA Section */}
       <section className="bg-orange-600 text-white py-7 lg:py-10">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to transform your educational institution?</h2>
@@ -275,7 +275,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
+      {/* Contact Section */}
       <section id="contact" className="py-20 bg-gray-900">
         <div className="container mx-auto">
           <div className="text-center mb-16">
@@ -394,7 +394,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      
+      {/* Footer */}
 
       <footer className="bg-gray-800 text-white pt-10 pb-5">
         <div className="container mx-auto px-6 lg:px-0">
