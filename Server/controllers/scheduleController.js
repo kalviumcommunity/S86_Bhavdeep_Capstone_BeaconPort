@@ -10,17 +10,17 @@ module.exports = {
       const schoolId = req.user.schoolId;
       const classId = req.params.id;
       
-      
+      // Update status of completed schedules before fetching
       await updateScheduleStatuses(schoolId);
       
       const schedules = await Schedule.find({
         school: schoolId,
         class: classId,
-        status: { $ne: 'completed' } 
+        status: { $ne: 'completed' } // Don't show completed schedules
       })
       .populate('teacher', 'name')
       .populate('subject', 'subjectName')
-      .sort({ startTime: 1 }); 
+      .sort({ startTime: 1 }); // Sort by start time
 
       res.status(200).json({
         success: true,
@@ -81,7 +81,7 @@ module.exports = {
         endTime
       });
       
-      
+      // Check if all required fields are present
       if (!teacher || !subject || !selectedClass || !startTime || !endTime || !date) {
         return res.status(400).json({
           success: false,
@@ -89,15 +89,15 @@ module.exports = {
         });
       }
       
-      
+      // Format date strings - ensure they're in a format JavaScript can parse
       let formattedStartTime, formattedEndTime;
       
       try {
-        
+        // Convert input strings to ISO format dates
         formattedStartTime = new Date(`${date}T${startTime}`);
         formattedEndTime = new Date(`${date}T${endTime}`);
         
-        
+        // Validate that dates are valid
         if (isNaN(formattedStartTime.getTime()) || isNaN(formattedEndTime.getTime())) {
           throw new Error("Invalid date format");
         }
@@ -109,7 +109,7 @@ module.exports = {
         });
       }
       
-      
+      // Check if the schedule is already in the past
       const now = new Date();
       if (formattedEndTime < now) {
         return res.status(400).json({
@@ -118,7 +118,7 @@ module.exports = {
         });
       }
       
-      
+      // Determine initial status
       let status = 'active';
       
       const newSchedule = new Schedule({
@@ -156,7 +156,7 @@ module.exports = {
       const schoolId = req.user.schoolId;
       const { startTime, endTime, date, status, ...otherData } = req.body;
       
-      
+      // First check if schedule exists and belongs to this school
       const existingSchedule = await Schedule.findOne({ 
         _id: id, 
         school: schoolId 
@@ -169,7 +169,7 @@ module.exports = {
         });
       }
       
-      
+      // Prevent updates to completed schedules
       if (existingSchedule.status === 'completed') {
         return res.status(400).json({
           success: false,
@@ -179,12 +179,12 @@ module.exports = {
       
       let updateData = { ...otherData };
       
-      
+      // Update status if provided
       if (status && ['active', 'cancelled'].includes(status)) {
         updateData.status = status;
       }
       
-      
+      // If we have date and time information, update the datetime fields
       if (date && startTime) {
         try {
           const formattedStartTime = new Date(`${date}T${startTime}`);
@@ -215,7 +215,7 @@ module.exports = {
         }
       }
       
-      
+      // Validate that start time is before end time
       const finalStartTime = updateData.startTime || existingSchedule.startTime;
       const finalEndTime = updateData.endTime || existingSchedule.endTime;
       
@@ -253,7 +253,7 @@ module.exports = {
       let id = req.params.id;
       let schoolId = req.user.schoolId;
 
-      
+      // First check if schedule exists and belongs to this school
       const existingSchedule = await Schedule.findOne({ 
         _id: id, 
         school: schoolId 
@@ -266,7 +266,7 @@ module.exports = {
         });
       }
       
-      
+      // Prevent deletion of completed schedules (optional, based on requirements)
       if (existingSchedule.status === 'completed') {
         return res.status(400).json({
           success: false,
@@ -289,7 +289,7 @@ module.exports = {
     }
   },
   
-  
+  // Helper function to update schedule statuses (called by other endpoints)
   cleanupCompletedSchedules: async (req, res) => {
     try {
       const schoolId = req.user.schoolId;
@@ -310,7 +310,7 @@ module.exports = {
     }
   },
 
-  
+  // Updated function to get subjects for a teacher
   getTeacherSubjects: async (req, res) => {
     try {
       const teacherId = req.params.teacherId;
@@ -323,7 +323,7 @@ module.exports = {
         });
       }
       
-      
+      // Find the teacher to get their assigned subjects
       const teacher = await Teacher.findOne({
         _id: teacherId,
         school: schoolId
@@ -336,14 +336,14 @@ module.exports = {
         });
       }
       
-      
+      // Check if teacher has subjects assigned
       if (teacher.subjects && teacher.subjects.length > 0) {
         return res.status(200).json({
           success: true,
           subjects: teacher.subjects
         });
       } else {
-        
+        // If no subjects are assigned, return an empty array
         return res.status(200).json({
           success: true,
           subjects: []
@@ -359,11 +359,11 @@ module.exports = {
   }
 };
 
-
+// Helper function to update schedule statuses
 async function updateScheduleStatuses(schoolId) {
   const now = new Date();
   
-  
+  // Find schedules that have ended but are still marked as active
   const result = await Schedule.updateMany(
     {
       school: schoolId,
@@ -375,7 +375,7 @@ async function updateScheduleStatuses(schoolId) {
     }
   );
   
-  
+  // Optional: Delete completed schedules older than X days (e.g., 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   

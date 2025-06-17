@@ -39,7 +39,7 @@ const attendanceSchema = new mongoose.Schema({
     }
 });
 
-
+// Create compound index to ensure unique attendance per student per day per class
 attendanceSchema.index({ 
     student: 1, 
     class: 1, 
@@ -49,18 +49,18 @@ attendanceSchema.index({
     name: 'unique_student_class_date_attendance'
 });
 
-
+// Create additional indexes for better query performance
 attendanceSchema.index({ class: 1, date: 1 });
 attendanceSchema.index({ school: 1, date: 1 });
 attendanceSchema.index({ student: 1, date: -1 });
 
-
+// Middleware to update the updatedAt field on save
 attendanceSchema.pre('save', function(next) {
     this.updatedAt = Date.now();
     next();
 });
 
-
+// Static method to check if attendance exists for a class on a specific date
 attendanceSchema.statics.checkAttendanceExists = async function(classId, date) {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
@@ -79,7 +79,7 @@ attendanceSchema.statics.checkAttendanceExists = async function(classId, date) {
     return !!attendance;
 };
 
-
+// Static method to get attendance summary for a class on a specific date
 attendanceSchema.statics.getAttendanceSummary = async function(classId, date) {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);

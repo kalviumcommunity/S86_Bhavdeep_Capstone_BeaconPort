@@ -38,7 +38,7 @@ const RoleSelection = () => {
 
     return (
         <div className="min-h-screen bg-gray-900 text-gray-100">
-            
+            {/* Header */}
             <header className="bg-gray-800 shadow-md">
                 <nav className="container px-5 py-4 flex gap-15  items-center">
                     <div className="flex items-center">
@@ -56,7 +56,7 @@ const RoleSelection = () => {
                 </nav>
             </header>
 
-            
+            {/* Main Content */}
             <div className="container mx-auto px-6 py-10 lg:py-5">
                 <div className="text-center mb-5">
                     <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
@@ -73,19 +73,19 @@ const RoleSelection = () => {
                             key={role.id}
                             className="group relative bg-gray-800 rounded-2xl p-8 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-gray-700 hover:border-transparent overflow-hidden"
                         >
-                            
+                            {/* Gradient overlay on hover */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${role.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl`}></div>
 
-                            
+                            {/* Content */}
                             <div className="relative z-10">
-                                
+                                {/* Icon */}
                                 <div className="flex justify-center mb-6">
                                     <div className="p-4 bg-gray-700 rounded-full group-hover:bg-gray-600 transition-colors duration-300">
                                         {role.icon}
                                     </div>
                                 </div>
 
-                                
+                                {/* Title and Description */}
                                 <h3 className="text-2xl font-bold text-center mb-4 group-hover:text-orange-400 transition-colors duration-300">
                                     {role.title}
                                 </h3>
@@ -93,7 +93,7 @@ const RoleSelection = () => {
                                     {role.description}
                                 </p>
 
-                                
+                                {/* Features List */}
                                 <ul className="space-y-3 mb-8">
                                     {role.features.map((feature, index) => (
                                         <li key={index} className="flex items-center text-sm text-gray-300">
@@ -103,7 +103,7 @@ const RoleSelection = () => {
                                     ))}
                                 </ul>
 
-                                
+                                {/* Action Button */}
                                 <div onClick={() => handleRoleSelect(role.id)} className="cursor-pointer text-center">
                                     <button className="cursor-pointer w-full py-3 px-6 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-medium rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all duration-300 transform group-hover:scale-105 shadow-lg hover:shadow-xl">
                                         Login as {role.title}
@@ -111,14 +111,14 @@ const RoleSelection = () => {
                                 </div>
                             </div>
 
-                            
+                            {/* Decorative elements */}
                             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-orange-500/20 to-transparent rounded-full -translate-y-10 translate-x-10 group-hover:scale-150 transition-transform duration-500"></div>
                             <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-orange-500/10 to-transparent rounded-full translate-y-8 -translate-x-8 group-hover:scale-125 transition-transform duration-500"></div>
                         </div>
                     ))}
                 </div>
 
-                
+                {/* Additional Info */}
                 <div className="text-center mt-16">
                     <p className="text-gray-500 mb-4">
                         Own a school but don't have an account yet? Join us
@@ -132,7 +132,7 @@ const RoleSelection = () => {
                 </div>
             </div>
 
-            
+            {/* Background Pattern */}
             <div className="fixed inset-0 -z-10 overflow-hidden">
                 <div className="absolute -top-40 -right-32 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-40 -left-32 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl"></div>
