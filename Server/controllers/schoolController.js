@@ -218,6 +218,172 @@ module.exports = {
     }
   },
 
+  registerSchoolGoogle: async (req, res) => {
+    let tempFilePath = null;
+
+    try {
+      const form = new formidable.IncomingForm({
+        maxFileSize: 10 * 1024 * 1024, // 10MB limit
+        allowEmptyFiles: false,
+        filter: ({ name, originalFilename, mimetype }) => {
+          return name === "image" && mimetype && mimetype.includes("image");
+        },
+      });
+
+      form.parse(req, async (err, fields, files) => {
+        if (err) {
+          return res.status(400).json({
+            success: false,
+            message: "Form parsing error: " + err.message,
+          });
+        }
+
+        try {
+          const { token, schoolName, ownerName } = fields;
+
+          // Validate required fields
+          if (
+            !token ||
+            !token[0] ||
+            !schoolName ||
+            !schoolName[0] ||
+            !ownerName ||
+            !ownerName[0]
+          ) {
+            return res.status(400).json({
+              success: false,
+              message: "Google token, school name, and owner name are required",
+            });
+          }
+
+          // Validate image
+          if (!files.image || !files.image[0]) {
+            return res.status(400).json({
+              success: false,
+              message: "School image is required",
+            });
+          }
+
+          const photo = files.image[0];
+          tempFilePath = photo.filepath;
+
+          // Validate image file
+          if (!photo.mimetype || !photo.mimetype.startsWith("image/")) {
+            cleanupTempFile(tempFilePath);
+            return res.status(400).json({
+              success: false,
+              message: "Please upload a valid image file",
+            });
+          }
+
+          // Verify Google token
+          const googleResponse = await axios.get(
+            `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${token[0]}`,
+            { timeout: 10000 }
+          );
+
+          const { email, id: googleId, name } = googleResponse.data;
+
+          if (!email || !googleId) {
+            cleanupTempFile(tempFilePath);
+            return res.status(400).json({
+              success: false,
+              message: "Invalid Google token - missing user data",
+            });
+          }
+
+          // Check if school already exists
+          const existingSchool = await School.findOne({
+            $or: [
+              { email: email },
+              { oauthId: googleId, oauthProvider: "google" },
+            ],
+          });
+
+          if (existingSchool) {
+            cleanupTempFile(tempFilePath);
+            return res.status(400).json({
+              success: false,
+              message:
+                "School with this email or Google account already exists",
+            });
+          }
+
+          // Upload image to Cloudinary
+          const uploadResult = await uploadToCloudinary(
+            photo.filepath,
+            "school_management/schools/google"
+          );
+
+          if (!uploadResult.success) {
+            cleanupTempFile(tempFilePath);
+            return res.status(500).json({
+              success: false,
+              message: "Failed to upload image to cloud storage",
+              error: uploadResult.error,
+            });
+          }
+
+          // Clean up temporary file
+          cleanupTempFile(tempFilePath);
+
+          // Generate a random password for OAuth users
+          const randomPassword = crypto.randomBytes(16).toString("hex");
+          const salt = bcrypt.genSaltSync(10);
+          const hashPassword = bcrypt.hashSync(randomPassword, salt);
+
+          // Create new school
+          const newSchool = new School({
+            schoolName: schoolName[0].trim(),
+            email: email.toLowerCase().trim(),
+            ownerName: ownerName[0].trim(),
+            schoolImg: uploadResult.url,
+            schoolImgPublicId: uploadResult.public_id,
+            password: hashPassword,
+            oauthProvider: "google",
+            oauthId: googleId,
+            isOAuthUser: true,
+          });
+
+          const savedSchool = await newSchool.save();
+
+          // Remove sensitive data from response
+          const schoolData = savedSchool.toObject();
+          delete schoolData.password;
+          delete schoolData.resetPasswordToken;
+          delete schoolData.resetPasswordExpires;
+
+          res.status(201).json({
+            success: true,
+            message: "School registered successfully with Google",
+            data: schoolData,
+          });
+        } catch (googleError) {
+          cleanupTempFile(tempFilePath);
+          console.error("Google OAuth verification error:", googleError);
+
+          if (googleError.response?.status === 401) {
+            return res.status(400).json({
+              success: false,
+              message: "Invalid or expired Google token",
+            });
+          }
+
+          return res.status(400).json({
+            success: false,
+            message: "Google token verification failed",
+          });
+        }
+      });
+    } catch (error) {
+      cleanupTempFile(tempFilePath);
+      console.error("Google OAuth registration error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Google OAuth registration failed",
+      });
+    }
+  },
 
   loginSchool: async (req, res) => {
     try {
@@ -300,7 +466,72 @@ module.exports = {
     }
   },
 
+  loginSchoolGoogle: async (req, res) => {
+    try {
+      const { email } = req.body;
 
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is required for OAuth login",
+        });
+      }
+
+      // Find school with Google OAuth
+      const school = await School.findOne({
+        email: email.toLowerCase().trim(),
+        oauthProvider: "google",
+        isOAuthUser: true,
+      });
+
+      if (!school) {
+        return res.status(404).json({
+          success: false,
+          message: "No account found with this Google account",
+        });
+      }
+
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error("JWT_SECRET not configured");
+      }
+
+      const token = jwt.sign(
+        {
+          id: school._id,
+          schoolId: school._id,
+          ownerName: school.ownerName,
+          schoolName: school.schoolName,
+          schoolImg: school.schoolImg,
+          role: "SCHOOL",
+        },
+        jwtSecret,
+        { expiresIn: "7d" }
+      );
+
+      res.header("Authorization", token);
+
+      return res.status(200).json({
+        success: true,
+        message: "Google login successful",
+        user: {
+          id: school._id,
+          ownerName: school.ownerName,
+          schoolName: school.schoolName,
+          schoolImg: school.schoolImg,
+          email: school.email,
+          role: "SCHOOL",
+        },
+        token: token,
+      });
+    } catch (error) {
+      console.error("Google OAuth login error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Google OAuth login failed",
+      });
+    }
+  },
 
   forgotPassword: async (req, res) => {
     try {

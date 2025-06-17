@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 import { useFormik } from 'formik';
 import { Button, Typography, Alert, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import BookIcon from '@mui/icons-material/MenuBook';
 import { School, Users, GraduationCap } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loginSchema } from '../../../yupSchema/loginSchema';
@@ -82,7 +83,7 @@ export default function Login() {
   const [error, setError] = React.useState(null);
   const [success, setSuccess] = React.useState(null);
   const [rememberMe, setRememberMe] = React.useState(false);
-
+  const [oauthLoading, setOauthLoading] = React.useState(false);
 
   // Forgot Password states
   const [forgotPasswordOpen, setForgotPasswordOpen] = React.useState(false);
@@ -296,7 +297,105 @@ const handleForgotPassword = async () => {
     setForgotPasswordOpen(true);
   };
 
+  // Google OAuth login
+  const handleGoogleLogin = async (e) => {
+    e.preventDefault();
 
+    if (role !== 'school') {
+      setError('OAuth login is currently only available for School Admin accounts');
+      return;
+    }
+
+    setOauthLoading(true);
+    setError(null);
+
+    try {
+      // Initialize Google OAuth
+      if (window.google && window.google.accounts) {
+        window.google.accounts.oauth2.initTokenClient({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+          callback: async (response) => {
+            try {
+              if (response.access_token) {
+                // First, try to get user info to check if account exists
+                const userInfoResponse = await axios.get(
+                  `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${response.access_token}`
+                );
+
+                const userEmail = userInfoResponse.data.email;
+
+                // Try OAuth login first
+                try {
+                  const loginResponse = await axios.post(`${baseApi}/school/login/oauth`, {
+                    email: userEmail,
+                    provider: 'google'
+                  });
+
+                  if (loginResponse.data.token) {
+                    localStorage.setItem('token', loginResponse.data.token);
+                    localStorage.setItem('user', JSON.stringify(loginResponse.data.user));
+
+                    login({
+                      token: loginResponse.data.token,
+                      user: loginResponse.data.user
+                    });
+
+                    setSuccess("Google login successful!");
+                    setTimeout(() => {
+                      navigate('/school');
+                    }, 1000);
+                  }
+                } catch (loginError) {
+                  // If login fails, it means account doesn't exist - redirect to registration
+                  if (loginError.response?.status === 404) {
+                    setError("No account found with this Google email. Please register first.");
+                    setTimeout(() => {
+                      navigate('/register', {
+                        state: {
+                          googleToken: response.access_token,
+                          userInfo: userInfoResponse.data
+                        }
+                      });
+                    }, 2000);
+                  } else {
+                    throw loginError;
+                  }
+                }
+              }
+            } catch (error) {
+              console.error("Google OAuth error:", error);
+              setError("Google login failed. Please try again.");
+            } finally {
+              setOauthLoading(false);
+            }
+          }
+        }).requestAccessToken();
+      } else {
+        setError("Google login is not available. Please use email/password login.");
+        setOauthLoading(false);
+      }
+    } catch (error) {
+      console.error("Google OAuth initialization error:", error);
+      setError("Google login initialization failed");
+      setOauthLoading(false);
+    }
+  };
+
+  // Load Google OAuth script
+  React.useEffect(() => {
+    const loadGoogleScript = () => {
+      if (!window.google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+      }
+    };
+
+    loadGoogleScript();
+  }, []);
 
   // Return loading if role is invalid (will redirect)
   if (!role || !roleConfig[role]) {
@@ -407,6 +506,22 @@ const handleForgotPassword = async () => {
               )}
             </div>
           </div>
+
+          <Button
+            type='submit'
+            variant="contained"
+            disabled={loading || oauthLoading}
+            sx={{
+              mt: { xs: 1, sm: 2, md: 3, lg: 4 },
+              py: { xs: 1, sm: 1.2, md: 1.2 },
+              textTransform: 'uppercase',
+              fontWeight: 'bold',
+            }}
+            className="bg-gradient-to-r from-amber-500 to-orange-600"
+          >
+            {loading ? <CircularProgress size={24} /> : `Sign In as ${currentRole.title}`}
+          </Button>
+
           {role === 'school' && (
             <div className="mt-4 text-center">
               <Typography variant="body2" className="text-gray-400">
@@ -419,7 +534,38 @@ const handleForgotPassword = async () => {
           )}
 
           {/* Only show Google OAuth section when School Admin is selected */}
-          {role === 'school' }
+          {role === 'school' && (
+            <>
+              <div className="mt-6 flex items-center justify-center">
+                <div className="h-px bg-gray-700 flex-grow"></div>
+                <span className="mx-4 text-sm text-gray-500">Or continue with</span>
+                <div className="h-px bg-gray-700 flex-grow"></div>
+              </div>
+
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={loading || oauthLoading}
+                  className="w-full max-w-xs h-10 inline-flex justify-center items-center py-2 px-4 border border-gray-600 rounded-md shadow-sm bg-gray-700 text-sm font-medium text-gray-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {oauthLoading ? (
+                    <CircularProgress size={20} sx={{ color: '#FF9800' }} />
+                  ) : (
+                    <>
+                      <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                      </svg>
+                      Continue with Google
+                    </>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
         </Box>
 
         {/* Forgot Password Dialog */}
