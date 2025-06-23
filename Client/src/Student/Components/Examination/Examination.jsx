@@ -502,7 +502,7 @@ const Examination = () => {
   const canViewActions = userRole === 'SCHOOL' || userRole === 'TEACHER';
 
   return (
-    <div className="pt-20 px-6 min-h-screen bg-gray-900 text-white">
+    <div className="pt-5 px-6 min-h-screen text-white">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-amber-500">Examination Management</h1>

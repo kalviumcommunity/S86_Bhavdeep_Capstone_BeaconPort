@@ -221,7 +221,7 @@ export default function Dashboard() {
     width: '100%',
     maxWidth: isLarge ? '1200px' : '100%',
     margin: '0 auto',
-    padding: isMobile ? '1rem' : isTablet ? '1.5rem' : '2rem',
+    padding: isMobile ? '5px' : isTablet ? '1.5rem' : '2rem',
     minHeight: '100vh',
   };
 
@@ -373,14 +373,14 @@ export default function Dashboard() {
                         fontWeight: 600,
                         color: '#ffab91',
                         fontSize: isMobile ? '14px' : '16px',
-                        padding: isMobile ? '8px 4px' : undefined,
+                        padding: isMobile ? '8px 14px' : '8px 24px',
                       }}>
                         {row.label}
                       </TableCell>
                       <TableCell align="center" style={{
                         fontSize: isMobile ? '14px' : '16px',
                         color: '#ffffff',
-                        padding: isMobile ? '8px 4px' : undefined,
+                        padding: isMobile ? '8px 14px' : '8px 24px',
                         wordBreak: 'break-word',
                       }}>
                         {row.value}
@@ -400,14 +400,14 @@ export default function Dashboard() {
                                 fontWeight: 600,
                                 color: '#ffab91',
                                 fontSize: isMobile ? '14px' : '16px',
-                                padding: isMobile ? '8px 4px' : undefined,
+                                padding: isMobile ? '8px 14px' : '8px 24px',
                               }}>
                                 Email
                               </TableCell>
                               <TableCell align="center" style={{
                                 fontSize: isMobile ? '14px' : '16px',
                                 color: '#ffffff',
-                                padding: isMobile ? '8px 4px' : undefined,
+                                padding: isMobile ? '8px 14px' : '8px 24px',
                                 wordBreak: 'break-all',
                               }}>
                                 {studentData.email}
@@ -421,15 +421,15 @@ export default function Dashboard() {
                                 color: '#ffab91',
                                 fontSize: isMobile ? '14px' : '16px',
                                 borderBottom: '2px solid rgba(255, 193, 7, 0.3)',
-                                padding: isMobile ? '8px 4px' : undefined,
+                                padding: isMobile ? '8px 14px' : '8px 24px',
                               }}>
                                 Password
                               </TableCell>
-                              <TableCell align="center" style={{
+                              <TableCell align="right" style={{
                                 borderBottom: '2px solid rgba(255, 193, 7, 0.3)',
                                 padding: isMobile ? '8px 4px' : undefined,
                               }}>
-                                <Box display="flex" justifyContent="center" alignItems="center" flexWrap="wrap">
+                                <Box display="flex" justifyContent="center" alignItems="center" flexWrap="wrap" gap="20px">
                                   <span style={{
                                     marginRight: isMobile ? 4 : 8,
                                     fontSize: isMobile ? '14px' : '16px',
@@ -475,8 +475,8 @@ export default function Dashboard() {
                 background: 'linear-gradient(45deg, #ff7043, #ff5722)',
                 borderRadius: isMobile ? '8px' : '15px',
                 boxShadow: '0 12px 40px rgba(255, 112, 67, 0.3)',
-                width: isMobile ? '200px' : isTablet ? '280px' : '100%',
-                maxWidth: isMobile ? '200px' : isTablet ? '300px' : '450px',
+                width: isMobile ? '250px' : isTablet ? '280px' : '100%',
+                maxWidth: isMobile ? '250px' : isTablet ? '300px' : '450px',
                 height: 'fit-content',
                 justifyContent: "center",
               }}>
@@ -485,7 +485,7 @@ export default function Dashboard() {
                   alt="student"
                   style={{
                     width: '100%',
-                    height: isMobile ? '200px' : isTablet ? '280px' : '450px',
+                    height: isMobile ? '270px' : isTablet ? '280px' : '450px',
                     borderRadius: isMobile ? '5px' : '14px',
                     objectFit: 'cover',
                     border: '4px solid rgba(255, 255, 255, 0.1)',

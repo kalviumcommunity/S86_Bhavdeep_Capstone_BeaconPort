@@ -33,6 +33,7 @@ import { useState } from "react";
 import axios from "axios";
 import { baseApi } from "../environment";
 import { useEffect } from "react";
+import ChatBot from "./Components/ChatBot/ChatBot";
 
 
 const drawerWidth = 240;
@@ -371,6 +372,7 @@ export default function Student() {
           }}>
             <Outlet />
           </Box>
+          <ChatBot/>
         </Box>
       </Box>
     </ThemeProvider>

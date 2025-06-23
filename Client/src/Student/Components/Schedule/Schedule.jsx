@@ -324,7 +324,7 @@ const Schedule = () => {
 
   const statsData = [
     {
-      title: 'My Class',
+      title: 'My Class Information',
       displayValue: studentData?.studentClass?.classText || 'Not assigned',
       icon: <School sx={{ fontSize: isMobile ? 20 : 24 }} />,
       color: '#4299e1',
@@ -490,37 +490,10 @@ const Schedule = () => {
             ))}
           </Box>
 
-          {/* Student Class Info */}
-          {studentData && (
-            <Paper
-              sx={{
-                p: { xs: 2, md: 3 },
-                borderRadius: 3,
-                mb: 4,
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-                border: '1px solid #2d3748',
-                backgroundColor: '#1a202c',
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{ mb: 2, fontWeight: '600', color: '#f7fafc' }}
-              >
-                Class Information
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <School sx={{ fontSize: 20, color: '#4299e1' }} />
-                <Typography variant="body1" sx={{ color: '#f7fafc', fontWeight: '500' }}>
-                  {studentData.studentClass?.classText || 'Class information not available'}
-                </Typography>
-              </Box>
-            </Paper>
-          )}
-
           {/* Calendar Section */}
           <Paper
             sx={{
-              borderRadius: 3,
+              borderRadius: 2,
               overflow: 'hidden',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
               border: '1px solid #2d3748',
