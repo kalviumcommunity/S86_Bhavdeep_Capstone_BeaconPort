@@ -13,11 +13,14 @@ import { createTheme, ThemeProvider, useTheme } from '@mui/material/styles';
 import BookIcon from '@mui/icons-material/MenuBook';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import EditIcon from '@mui/icons-material/Edit';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import CloseIcon from '@mui/icons-material/Close';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PeopleIcon from '@mui/icons-material/School';
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -239,7 +242,9 @@ export default function Students() {
   const [success, setSuccess] = React.useState(null);
   const [classes, setClasses] = React.useState([]);
   const [message, setMessage] = React.useState('');
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [currentStudent, setCurrentStudent] = React.useState(null);
+  const [editFile, setEditFile] = React.useState(null);
   const [passwordVisibility, setPasswordVisibility] = React.useState({});
   const [params, setParams] = React.useState({});
   const [filterClass, setFilterClass] = React.useState("");
@@ -332,6 +337,9 @@ export default function Students() {
 
   const fileInputRef = React.useRef(null);
   const hiddenFileInputRef = React.useRef(null);
+  const editFileInputRef = React.useRef(null);
+  const [editImageUrl, setEditImageUrl] = React.useState(null);
+  const [originalEditImageUrl, setOriginalEditImageUrl] = React.useState(null);
 
   const handleClearFile = () => {
     if (fileInputRef.current) {
@@ -340,6 +348,21 @@ export default function Students() {
     setFile(null);
   };
 
+  const handleClearEditFile = () => {
+    if (editFileInputRef.current) {
+      editFileInputRef.current.value = '';
+    }
+    setEditFile(null);
+    setEditImageUrl(originalEditImageUrl);
+  };
+
+  const handleUploadClick = () => {
+    hiddenFileInputRef.current.click();
+  };
+
+  const handleEditUploadClick = () => {
+    editFileInputRef.current.click();
+  };
 
   const togglePasswordVisibility = (studentId) => {
     setPasswordVisibility(prev => ({
@@ -426,9 +449,147 @@ export default function Students() {
     setSuccess(null);
   };
 
+  const editFormik = useFormik({
+    initialValues: {
+      email: "",
+      name: "",
+      studentClass: "",
+      age: "",
+      gender: "",
+      parent: "",
+      parentNum: "",
+    },
+    onSubmit: async (values) => {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
 
+      try {
+        const fd = new FormData();
 
+        if (editFile) {
+          fd.append("image", editFile);
+        }
 
+        fd.append("name", values.name);
+        fd.append("email", values.email);
+        fd.append("studentClass", values.studentClass);
+        fd.append("age", values.age);
+        fd.append("gender", values.gender);
+        fd.append("parent", values.parent);
+        fd.append("parentNum", values.parentNum);
+
+        const token = localStorage.getItem('token');
+        const response = await axios.put(
+          `${baseApi}/student/update/${currentStudent._id}`,
+          fd,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        if (response.data.success) {
+          setSuccess(editFile ?
+            "Student updated successfully! Previous image has been removed from cloud storage." :
+            "Student updated successfully!"
+          );
+          setEditDialogOpen(false);
+          setMessage(`Student ${values.name} updated at ${new Date().toLocaleString()}`);
+          handleClearEditFile();
+          setCurrentStudent(null);
+          setOriginalEditImageUrl(null);
+        }
+      } catch (error) {
+        console.error("Update error:", error);
+        if (error.response?.status === 404) {
+          setError("Student not found");
+        } else {
+          setError(error.response?.data?.message || "Update failed");
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+  });
+
+  const handleEdit = (id) => {
+    const studentToEdit = students.find(student => student._id === id);
+    console.log(studentToEdit);
+    if (!studentToEdit) return;
+
+    setCurrentStudent(studentToEdit);
+
+    editFormik.setValues({
+      email: studentToEdit.email || "",
+      name: studentToEdit.name || "",
+      studentClass: studentToEdit.studentClass?._id || "",
+      age: studentToEdit.age || "",
+      gender: studentToEdit.gender,
+      parent: studentToEdit.parent || "",
+      parentNum: studentToEdit.parentNum || "",
+    });
+
+    if (studentToEdit.studentImg) {
+      setOriginalEditImageUrl(studentToEdit.studentImg);
+      setEditImageUrl(studentToEdit.studentImg);
+    } else {
+      setOriginalEditImageUrl(null);
+      setEditImageUrl(null);
+    }
+
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    const studentToDelete = students.find(student => student._id === id);
+    const studentName = studentToDelete?.name || 'this student';
+
+    if (!window.confirm(`Are you sure you want to delete ${studentName}? This will also permanently remove their image from cloud storage.`)) {
+      return;
+    }
+
+    setDeleteLoading(prev => ({ ...prev, [id]: true }));
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(
+        `${baseApi}/student/delete/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setSuccess("Student and associated image deleted successfully from both database and cloud storage");
+        setMessage(`Student ${studentName} deleted at ${new Date().toLocaleString()}`);
+      }
+    } catch (err) {
+      console.log(err);
+      if (err.response?.status === 404) {
+        setError("Student not found or already deleted");
+      } else {
+        setError(err.response?.data?.message || "Failed to delete student");
+      }
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const handleEditDialogClose = () => {
+    setEditDialogOpen(false);
+    setEditFile(null);
+    setEditImageUrl(null);
+    setOriginalEditImageUrl(null);
+    setCurrentStudent(null);
+    if (editFileInputRef.current) {
+      editFileInputRef.current.value = '';
+    }
+  };
   return (
     <ThemeProvider theme={darkTheme}>
       <Box sx={{
@@ -971,6 +1132,39 @@ export default function Students() {
                           </InfoRow>
                         </Box>
 
+
+
+                        <Box sx={{
+                          display: 'flex',
+                          gap: 1,
+                          flexDirection: 'row'
+                        }}>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<EditIcon />}
+                            onClick={() => handleEdit(student._id)}
+                            fullWidth={isMobile}
+                            sx={{ flex: 1 }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            startIcon={deleteLoading[student._id] ?
+                              <CircularProgress size={16} /> :
+                              <DeleteIcon />
+                            }
+                            onClick={() => handleDelete(student._id)}
+                            disabled={deleteLoading[student._id]}
+                            fullWidth={isMobile}
+                            sx={{ flex: 1 }}
+                          >
+                            Delete
+                          </Button>
+                        </Box>
                       </CardContent>
                     </div>
                   </div>
@@ -980,6 +1174,269 @@ export default function Students() {
           </div>
         )}
 
+        {/* Edit Student Dialog */}
+        <Dialog
+          open={editDialogOpen}
+          onClose={handleEditDialogClose}
+          maxWidth="md"
+          fullWidth
+          fullScreen={isMobile}
+          PaperProps={{
+            sx: {
+              bgcolor: 'background.paper',
+              backgroundImage: 'linear-gradient(135deg, #1e1e1e 0%, #1e1e1e 100%)',
+              border: '1px solid rgba(255, 152, 0, 0.12)',
+            }
+          }}
+        >
+          <DialogTitle sx={{
+            borderBottom: '1px solid rgba(255, 152, 0, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2
+          }}>
+            <EditIcon color="primary" />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h6">Edit Student</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Update student information
+              </Typography>
+            </Box>
+            <IconButton onClick={handleEditDialogClose}>
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent sx={{ mt: { xs: 2, lg: 4 } }}>
+            <Box
+              component="form"
+              onSubmit={editFormik.handleSubmit}
+              sx={{ width: '100%' }}
+            >
+              <Grid container spacing={3}>
+                <div className='flex flex-col w-full lg:flex-row lg:justify-center items-center gap-10 lg:items-start m-auto'>
+                  {editImageUrl && (
+                    <Grid item xs={12}>
+                      <Box sx={{ textAlign: 'center', mb: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                          Current Student Image
+                        </Typography>
+                        <CardMedia
+                          component="img"
+                          height="200"
+                          image={editImageUrl}
+                          alt="Current student"
+                          sx={{
+                            borderRadius: 2,
+                            maxWidth: 300,
+                            mx: 'auto',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      </Box>
+                    </Grid>
+                  )}
+
+                  <Grid item xs={12}>
+                    <Box>
+                      <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                        Update Student Image (Optional)
+                      </Typography>
+                      <input
+                        type="file"
+                        ref={editFileInputRef}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                        onChange={(e) => {
+                          const selectedFile = e.target.files[0];
+                          if (selectedFile) {
+                            setEditFile(selectedFile);
+                            const imageUrl = URL.createObjectURL(selectedFile);
+                            setEditImageUrl(imageUrl);
+                          }
+                        }}
+                      />
+                      <Box sx={{ display: 'flex', gap: 2, flexDirection: isMobile ? 'column' : 'row' }}>
+                        <Button
+                          onClick={handleEditUploadClick}
+                          startIcon={<CloudUploadIcon />}
+                          variant={editFile ? "outlined" : "contained"}
+                          fullWidth={isMobile}
+                        >
+                          {editFile ? 'Change Image' : 'Upload New Image'}
+                        </Button>
+                        {(editFile || editImageUrl !== originalEditImageUrl) && (
+                          <Button
+                            onClick={handleClearEditFile}
+                            variant="contained"
+                            startIcon={<CloseIcon />}
+                            fullWidth={isMobile}
+                          >
+                            Reset Image
+                          </Button>
+                        )}
+                      </Box>
+
+
+                      {editFile && (
+                        <Box sx={{ mt: 2 }}>
+                          <Chip
+                            label={editFile.name}
+                            onDelete={() => {
+                              setEditFile(null);
+                              setEditImageUrl(originalEditImageUrl);
+                              if (editFileInputRef.current) {
+                                editFileInputRef.current.value = '';
+                              }
+                            }}
+                            color="primary"
+                            variant="outlined"
+                          />
+                        </Box>
+                      )}
+                    </Box>
+                  </Grid>
+                </div>
+                <div className='flex flex-col items-center w-[100%] gap-5'>
+                  <Grid className=" w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                    <TextField
+                      name="name"
+                      label="Student Name"
+                      value={editFormik.values.name}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      error={editFormik.touched.name && Boolean(editFormik.errors.name)}
+                      helperText={editFormik.touched.name && editFormik.errors.name}
+                      fullWidth
+                    />
+                  </Grid>
+
+                  <Grid className=" w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                    <TextField
+                      name="email"
+                      label="Email address"
+                      type="email"
+                      value={editFormik.values.email}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      error={editFormik.touched.email && Boolean(editFormik.errors.email)}
+                      helperText={editFormik.touched.email && editFormik.errors.email}
+                      fullWidth
+                    />
+                  </Grid>
+
+                  <Grid className=" w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Class</InputLabel>
+                      <Select
+                        value={editFormik.values.studentClass}
+                        label="Class"
+                        name="studentClass"
+                        onChange={editFormik.handleChange}
+                        onBlur={editFormik.handleBlur}
+                        error={editFormik.touched.studentClass && Boolean(editFormik.errors.studentClass)}
+                      >
+                        {classes && classes.map((cls) => (
+                          <MenuItem key={cls._id} value={cls._id}>{cls.classText}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <div className='flex w-[90%] lg:w-1/2 gap-5 justify-between'>
+                    <Grid className="w-1/2" item xs={12} sm={6}>
+                      <TextField
+                        name="age"
+                        label="Age"
+                        value={editFormik.values.age}
+                        onChange={editFormik.handleChange}
+                        onBlur={editFormik.handleBlur}
+                        error={editFormik.touched.age && Boolean(editFormik.errors.age)}
+                        helperText={editFormik.touched.age && editFormik.errors.age}
+                        fullWidth
+                      />
+                    </Grid>
+
+                    <Grid className="w-1/2" item xs={12} sm={6}>
+                      <FormControl fullWidth>
+                        <InputLabel>Gender</InputLabel>
+                        <Select
+                          value={editFormik.values.gender}
+                          label="Gender"
+                          name="gender"
+                          onChange={editFormik.handleChange}
+                          onBlur={editFormik.handleBlur}
+                          error={editFormik.touched.gender && Boolean(editFormik.errors.gender)}
+                          displayEmpty
+                          renderValue={(selected) => {
+                            if (!selected) {
+                              return <span style={{ color: '#999' }}>Select Gender</span>;
+                            }
+                            return selected;
+                          }}
+                        >
+                          <MenuItem value="Male">Male</MenuItem>
+                          <MenuItem value="Female">Female</MenuItem>
+                          <MenuItem value="Other">Other</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                  </div>
+
+                  <Grid item className=" w-[90%] lg:w-1/2" xs={12} sm={6}>
+                    <TextField
+                      name="parent"
+                      label="Parent/Guardian Name"
+                      value={editFormik.values.parent}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      error={editFormik.touched.parent && Boolean(editFormik.errors.parent)}
+                      helperText={editFormik.touched.parent && editFormik.errors.parent}
+                      fullWidth
+                    />
+                  </Grid>
+
+                  <Grid item className=" w-[90%] lg:w-1/2" xs={12}>
+                    <TextField
+                      name="parentNum"
+                      label="Parent Phone Number"
+                      value={editFormik.values.parentNum}
+                      onChange={editFormik.handleChange}
+                      onBlur={editFormik.handleBlur}
+                      error={editFormik.touched.parentNum && Boolean(editFormik.errors.parentNum)}
+                      helperText={editFormik.touched.parentNum && editFormik.errors.parentNum}
+                      fullWidth
+                    />
+                  </Grid>
+                </div>
+              </Grid>
+            </Box>
+          </DialogContent>
+
+          <DialogActions sx={{
+            p: 3,
+            borderTop: '1px solid rgba(255, 152, 0, 0.12)',
+            flexDirection: 'row',
+            gap: 2
+          }}>
+            <Button
+              onClick={handleEditDialogClose}
+              variant="outlined"
+              fullWidth={isMobile}
+              sx={{ minWidth: 120 }}
+            >
+              Cancel
+            </Button>
+            <GradientButton
+              onClick={editFormik.handleSubmit}
+              disabled={loading}
+              fullWidth={isMobile}
+              sx={{ minWidth: 120 }}
+            >
+              {loading ? <CircularProgress size={24} /> : 'Update Student'}
+            </GradientButton>
+          </DialogActions>
+        </Dialog>
       </Box>
     </ThemeProvider >
   );
