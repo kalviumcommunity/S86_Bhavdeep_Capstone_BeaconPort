@@ -254,11 +254,7 @@ export default function Students() {
 
   const fetchClasses = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${baseApi}/class/all`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       setClasses(response.data.data);
     } catch (err) {
@@ -291,12 +287,8 @@ export default function Students() {
 
   const fetchStudents = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${baseApi}/student/fetch-with-query`, {
         params,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       if (response.data.success) {
@@ -409,16 +401,9 @@ export default function Students() {
         fd.append("parentNum", values.parentNum);
         fd.append("password", values.password);
 
-        const token = localStorage.getItem('token');
         const response = await axios.post(
           `${baseApi}/student/register`,
           fd,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${token}`
-            }
-          }
         );
 
         if (response.data.success) {
@@ -479,16 +464,9 @@ export default function Students() {
         fd.append("parent", values.parent);
         fd.append("parentNum", values.parentNum);
 
-        const token = localStorage.getItem('token');
         const response = await axios.put(
           `${baseApi}/student/update/${currentStudent._id}`,
           fd,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${token}`
-            }
-          }
         );
 
         if (response.data.success) {
@@ -554,13 +532,9 @@ export default function Students() {
     setDeleteLoading(prev => ({ ...prev, [id]: true }));
 
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.delete(
         `${baseApi}/student/delete/${id}`,
         {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
         }
       );
 

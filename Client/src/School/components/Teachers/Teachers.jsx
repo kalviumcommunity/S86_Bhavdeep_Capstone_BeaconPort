@@ -337,11 +337,7 @@ export default function Teachers() {
 
   const fetchClasses = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${baseApi}/class/all`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       setClasses(response.data.data);
     } catch (err) {
@@ -352,11 +348,7 @@ export default function Teachers() {
 
   const fetchSubjects = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${baseApi}/subject/all`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       setSubjects(response.data.data);
     } catch (err) {
@@ -410,12 +402,8 @@ export default function Teachers() {
   const [teachers, setTeachers] = React.useState([]);
   const fetchTeachers = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${baseApi}/teacher/fetch-with-query`, {
         params,
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       setTeachers(response.data.teachers);
@@ -545,16 +533,10 @@ export default function Teachers() {
           fd.append("teacherClasses", JSON.stringify(values.teacherClasses));
         }
 
-        const token = localStorage.getItem('token');
         await axios.post(
           `${baseApi}/teacher/register`,
           fd,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${token}`
-            }
-          }
+
         );
 
         setSuccess("Teacher registered successfully!");
@@ -613,15 +595,10 @@ export default function Teachers() {
           fd.append("teacherClasses", JSON.stringify(values.teacherClasses));
         }
 
-        const token = localStorage.getItem('token');
         await axios.put(
           `${baseApi}/teacher/update/${currentTeacher._id}`,
           fd,
           {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              'Authorization': `Bearer ${token}`
-            }
           }
         );
 
@@ -670,14 +647,8 @@ export default function Teachers() {
 
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.delete(
         `${baseApi}/teacher/delete/${id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
       );
       setSuccess("Teacher deleted Successfully");
       setMessage(response.data.message);
@@ -690,11 +661,7 @@ export default function Teachers() {
 
   const fetchTeacherWithPassword = async (id) => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${baseApi}/teacher/fetch/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       setTeachers(prevTeachers =>

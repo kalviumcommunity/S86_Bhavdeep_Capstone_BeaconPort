@@ -4,7 +4,6 @@ const School = require("../models/schoolModel");
 const path = require("path");
 const fs = require("fs");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
@@ -424,23 +423,6 @@ module.exports = {
         });
       }
 
-      const jwtSecret = process.env.JWT_SECRET;
-      if (!jwtSecret) {
-        throw new Error("JWT_SECRET not configured");
-      }
-
-      const token = jwt.sign(
-        {
-          id: school._id,
-          schoolId: school._id,
-          ownerName: school.ownerName,
-          schoolName: school.schoolName,
-          schoolImg: school.schoolImg,
-          role: "SCHOOL",
-        },
-        jwtSecret,
-        { expiresIn: "7d" }
-      );
 
       res.header("Authorization", token);
 
@@ -455,7 +437,6 @@ module.exports = {
           email: school.email,
           role: "SCHOOL",
         },
-        token: token,
       });
     } catch (error) {
       console.error("Login school error:", error);
@@ -491,25 +472,6 @@ module.exports = {
         });
       }
 
-      const jwtSecret = process.env.JWT_SECRET;
-      if (!jwtSecret) {
-        throw new Error("JWT_SECRET not configured");
-      }
-
-      const token = jwt.sign(
-        {
-          id: school._id,
-          schoolId: school._id,
-          ownerName: school.ownerName,
-          schoolName: school.schoolName,
-          schoolImg: school.schoolImg,
-          role: "SCHOOL",
-        },
-        jwtSecret,
-        { expiresIn: "7d" }
-      );
-
-      res.header("Authorization", token);
 
       return res.status(200).json({
         success: true,
@@ -522,7 +484,6 @@ module.exports = {
           email: school.email,
           role: "SCHOOL",
         },
-        token: token,
       });
     } catch (error) {
       console.error("Google OAuth login error:", error);
