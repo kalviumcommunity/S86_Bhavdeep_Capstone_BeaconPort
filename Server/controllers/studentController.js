@@ -2,6 +2,7 @@ require("dotenv").config();
 const formidable = require("formidable");
 const Student = require("../models/studentModel");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary"); // Import Cloudinary config
 
 module.exports = {
@@ -86,6 +87,18 @@ module.exports = {
 
       if (student) {
         if (req.body.password === student.password) {
+          const jwtSecret = process.env.JWT_SECRET;
+          const token = jwt.sign(
+            {
+              id: student._id,
+              schoolId: student.school,
+              name: student.name,
+              studentImg: student.studentImg,
+              role: "STUDENT",
+            },
+            jwtSecret
+          );
+          res.header("Authorization", token);
 
           return res.status(200).json({
             success: true,
@@ -97,6 +110,7 @@ module.exports = {
               studentImg: student.studentImg,
               role: "STUDENT",
             },
+            token: token,
           });
         } else {
           return res
