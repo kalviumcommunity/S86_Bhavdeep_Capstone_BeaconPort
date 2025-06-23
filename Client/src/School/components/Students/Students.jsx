@@ -54,7 +54,7 @@ const darkTheme = createTheme({
     },
     background: {
       default: '#0a0a0a',
-      paper: '#1a1a2e',
+      paper: '#1e1e1e',
     },
     text: {
       primary: '#ffffff',
@@ -192,7 +192,7 @@ const GradientButton = styled(Button)(({ theme }) => ({
 }));
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+  backgroundColor: '#1e1e1e',
   backdropFilter: 'blur(20px)',
   border: '1px solid rgba(255, 152, 0, 0.12)',
   borderRadius: '20px',
@@ -219,23 +219,6 @@ const HeaderContainer = styled(Box)(({ theme }) => ({
   },
 }));
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  position: 'relative',
-  overflow: 'hidden',
-  backgroundColor:"#1e1e1e",
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '4px',
-    background: 'linear-gradient(90deg, #FF9800, #FF5722)',
-  },
-}));
 
 const InfoRow = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -878,6 +861,45 @@ export default function Students() {
                       />
                     </Grid>
 
+                    <Grid item xs={12}>
+                      <Box>
+                        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                          Student Image *
+                        </Typography>
+                        <input
+                          type="file"
+                          ref={hiddenFileInputRef}
+                          style={{ display: 'none' }}
+                          accept="image/*"
+                          onChange={addImage}
+                        />
+                        <Button
+                          onClick={handleUploadClick}
+                          startIcon={<CloudUploadIcon />}
+                          fullWidth={isMobile}
+                          variant={file ? 'outlined' : "contained"}
+                          sx={{ mb: 1 }}
+                        >
+                          {file ? 'Change Image' : 'Upload Student Image'}
+                        </Button>
+                        {file && (
+                          <div className='w-[100%]'>
+                            <Box sx={{ mt: 2, display: 'flex', flexDirection: "column", alignItems: 'flex-start', gap: 2 }}>
+                              <Chip
+                                label={file.name}
+                                onDelete={handleClearFile}
+                                color="primary"
+                                variant="outlined"
+                                sx={{ borderRadius: "5px" }}
+                              />
+                              <Typography variant="body2" className='flex justify-center lg:w-[45%]' color="success.main">
+                                Image selected successfully
+                              </Typography>
+                            </Box>
+                          </div>
+                        )}
+                      </Box>
+                    </Grid>
                   </Grid>
 
                   <Box sx={{
@@ -969,7 +991,7 @@ export default function Students() {
 
         {/* Students Grid */}
         {!form && (
-          <Container maxWidth="xl">
+          <div maxWidth="xl">
             {students.length === 0 ? (
               <StyledPaper sx={{ textAlign: 'center', py: 8 }}>
                 <PeopleIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2, opacity: 0.5 }} />
@@ -981,11 +1003,11 @@ export default function Students() {
                 </Typography>
               </StyledPaper>
             ) : (
-              <Grid className="flex gap-5 flex-wrap justify-evenly" spacing={3}>
+              <div className="flex gap-5 flex-wrap justify-evenly">
                 {students.map((student) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={student._id}>
-                    <StyledCard  sx={{ width: { lg: "400px" }}}>
-                      <Box sx={{ position: 'relative' }}>
+                  <div key={student._id}>
+                    <div className='bg-[#1e1e1e] flex flex-col m-auto overflow-hidden w-90 lg:w-100 rounded-lg'>
+                      <Box className="overflow-hidden" sx={{ position: 'relative' }}>
                         <CardMedia
                           component="img"
                           height={isMobile ? "200" : "240"}
@@ -1144,12 +1166,12 @@ export default function Students() {
                           </Button>
                         </Box>
                       </CardContent>
-                    </StyledCard>
-                  </Grid>
+                    </div>
+                  </div>
                 ))}
-              </Grid>
+              </div>
             )}
-          </Container>
+          </div>
         )}
 
         {/* Edit Student Dialog */}
@@ -1162,7 +1184,7 @@ export default function Students() {
           PaperProps={{
             sx: {
               bgcolor: 'background.paper',
-              backgroundImage: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+              backgroundImage: 'linear-gradient(135deg, #1e1e1e 0%, #1e1e1e 100%)',
               border: '1px solid rgba(255, 152, 0, 0.12)',
             }
           }}
@@ -1192,6 +1214,89 @@ export default function Students() {
               sx={{ width: '100%' }}
             >
               <Grid container spacing={3}>
+                <div className='flex flex-col w-full lg:flex-row lg:justify-center items-center gap-10 lg:items-start m-auto'>
+                  {editImageUrl && (
+                    <Grid item xs={12}>
+                      <Box sx={{ textAlign: 'center', mb: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                          Current Student Image
+                        </Typography>
+                        <CardMedia
+                          component="img"
+                          height="200"
+                          image={editImageUrl}
+                          alt="Current student"
+                          sx={{
+                            borderRadius: 2,
+                            maxWidth: 300,
+                            mx: 'auto',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      </Box>
+                    </Grid>
+                  )}
+
+                  <Grid item xs={12}>
+                    <Box>
+                      <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                        Update Student Image (Optional)
+                      </Typography>
+                      <input
+                        type="file"
+                        ref={editFileInputRef}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                        onChange={(e) => {
+                          const selectedFile = e.target.files[0];
+                          if (selectedFile) {
+                            setEditFile(selectedFile);
+                            const imageUrl = URL.createObjectURL(selectedFile);
+                            setEditImageUrl(imageUrl);
+                          }
+                        }}
+                      />
+                      <Box sx={{ display: 'flex', gap: 2, flexDirection: isMobile ? 'column' : 'row' }}>
+                        <Button
+                          onClick={handleEditUploadClick}
+                          startIcon={<CloudUploadIcon />}
+                          variant={editFile ? "outlined" : "contained"}
+                          fullWidth={isMobile}
+                        >
+                          {editFile ? 'Change Image' : 'Upload New Image'}
+                        </Button>
+                        {(editFile || editImageUrl !== originalEditImageUrl) && (
+                          <Button
+                            onClick={handleClearEditFile}
+                            variant="contained"
+                            startIcon={<CloseIcon />}
+                            fullWidth={isMobile}
+                          >
+                            Reset Image
+                          </Button>
+                        )}
+                      </Box>
+
+
+                      {editFile && (
+                        <Box sx={{ mt: 2 }}>
+                          <Chip
+                            label={editFile.name}
+                            onDelete={() => {
+                              setEditFile(null);
+                              setEditImageUrl(originalEditImageUrl);
+                              if (editFileInputRef.current) {
+                                editFileInputRef.current.value = '';
+                              }
+                            }}
+                            color="primary"
+                            variant="outlined"
+                          />
+                        </Box>
+                      )}
+                    </Box>
+                  </Grid>
+                </div>
                 <div className='flex flex-col items-center w-[100%] gap-5'>
                   <Grid className=" w-[90%] lg:w-1/2" item xs={12} sm={6}>
                     <TextField
