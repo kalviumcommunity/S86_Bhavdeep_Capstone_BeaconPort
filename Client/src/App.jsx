@@ -36,7 +36,6 @@ import { AuthProvider } from './context/AuthContext'
 import AttendanceDetails from './School/components/Attendance/AttendanceDetails'
 import Logout from './Client/components/Logout/Logout'
 import RoleSelection from './Client/components/RoleSelection/RoleSelection'
-import ChatBot from './Student/Components/ChatBot/ChatBot'
 
 const App = () => {
   return (
@@ -84,7 +83,6 @@ const App = () => {
             <Route path='examination' element={<StudentExamination />} />
             <Route path='notice' element={<StudentNotice />} />
           </Route>
-            <Route path='chatbot' element={<ChatBot />} />
 
           {/* Teacher Routes */}
           <Route path='/teacher' element={<ProtectedRoute allowedRoles={['TEACHER']}><Teacher /></ProtectedRoute>}>
