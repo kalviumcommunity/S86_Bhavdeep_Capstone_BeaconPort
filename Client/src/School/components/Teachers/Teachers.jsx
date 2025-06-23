@@ -253,7 +253,8 @@ const darkTheme = createTheme({
 
 const GlassCard = styled(Card)(({ theme }) => ({
   backdropFilter: 'blur(20px)',
-  borderRadius: 15,
+  borderRadius: 10,
+  backgroundColor: "#1e1e1e",
   overflow: 'hidden',
   position: 'relative',
 }));
@@ -714,7 +715,7 @@ export default function Teachers() {
             {/* Header */}
             {!form && (
               <Fade in={!form}>
-                <Box className="flex gap-[16px] items-center p-5" sx={{ textAlign: 'center'}}>
+                <Box className="flex gap-[16px] items-center p-5" sx={{ textAlign: 'center' }}>
                   <Avatar sx={{
                     bgcolor: 'primary.main',
                     width: isMobile ? 40 : 56,
@@ -765,7 +766,7 @@ export default function Teachers() {
                   startIcon={<PersonAddIcon />}
                   size="medium"
                   variant="outlined"
-                  sx={{ height: "50px", borderRadius:"5px" }}
+                  sx={{ height: "50px", borderRadius: "5px" }}
                 >
                   Add Teacher
                 </Button>
@@ -796,7 +797,7 @@ export default function Teachers() {
           {/* Teacher Registration Form */}
           {form && (
             <Slide direction="down" in={form} mountOnEnter unmountOnExit>
-              <GlassCard sx={{ maxWidth: 800, mx: 'auto', p: { xs: 2, sm: 4 }, mb: 4 }}>
+              <GlassCard sx={{ maxWidth: 700, mx: 'auto', p: { xs: 2, sm: 4 }, mb: 4 }}>
                 <Typography
                   variant="h5"
                   sx={{
@@ -823,238 +824,311 @@ export default function Teachers() {
                     {success}
                   </Alert>
                 )}
-
+                <Divider sx={{ mb: 2 }} />
                 <form onSubmit={formik.handleSubmit}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
-                      <StyledTextField
-                        fullWidth
-                        label="Teacher Name"
-                        name="name"
-                        value={formik.values.name}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.name && Boolean(formik.errors.name)}
-                        helperText={formik.touched.name && formik.errors.name}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <StyledTextField
-                        fullWidth
-                        label="Email"
-                        name="email"
-                        type="email"
-                        value={formik.values.email}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.email && Boolean(formik.errors.email)}
-                        helperText={formik.touched.email && formik.errors.email}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <StyledTextField
-                        fullWidth
-                        label="Qualification"
-                        name="qualification"
-                        value={formik.values.qualification}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.qualification && Boolean(formik.errors.qualification)}
-                        helperText={formik.touched.qualification && formik.errors.qualification}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <StyledTextField
-                        fullWidth
-                        label="Age"
-                        name="age"
-                        type="number"
-                        value={formik.values.age}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.age && Boolean(formik.errors.age)}
-                        helperText={formik.touched.age && formik.errors.age}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <FormControl fullWidth error={formik.touched.gender && Boolean(formik.errors.gender)}>
-                        <InputLabel>Gender</InputLabel>
-                        <Select
-                          value={formik.values.gender}
-                          name="gender"
+                  <Grid className="flex flex-col gap-4" spacing={3}>
+                    <div className='flex flex-col items-center md:flex-row gap-4'>
+                      <Grid className="w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                        <StyledTextField
+                          fullWidth
+                          label="Teacher Name"
+                          name="name"
+                          value={formik.values.name}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          input={<OutlinedInput label="Gender" />}
-                          sx={{
-                            borderRadius: 3,
-                            '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: 'rgba(255, 255, 255, 0.23)',
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#FF6B35',
-                            },
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#FF6B35',
-                            },
-                          }}
-                        >
-                          <MenuItem value="Male">Male</MenuItem>
-                          <MenuItem value="Female">Female</MenuItem>
-                          <MenuItem value="Other">Other</MenuItem>
-                        </Select>
-                        {formik.touched.gender && formik.errors.gender && (
-                          <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
-                            {formik.errors.gender}
-                          </Typography>
-                        )}
-                      </FormControl>
-                    </Grid>
+                          error={formik.touched.name && Boolean(formik.errors.name)}
+                          helperText={formik.touched.name && formik.errors.name}
+                        />
+                      </Grid>
 
-                    <Grid item xs={12} sm={6}>
-                      <StyledTextField
-                        fullWidth
-                        label="Password"
-                        name="password"
-                        type="password"
-                        value={formik.values.password}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.password && Boolean(formik.errors.password)}
-                        helperText={formik.touched.password && formik.errors.password}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <StyledTextField
-                        fullWidth
-                        label="Confirm Password"
-                        name="confirmPassword"
-                        type="password"
-                        value={formik.values.confirmPassword}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
-                        helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
-                      />
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <FormControl fullWidth error={formik.touched.subjects && Boolean(formik.errors.subjects)}>
-                        <InputLabel>Subjects</InputLabel>
-                        <Select
-                          multiple
-                          value={formik.values.subjects}
-                          name="subjects"
+                      <Grid className="w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                        <StyledTextField
+                          fullWidth
+                          label="Email"
+                          name="email"
+                          type="email"
+                          value={formik.values.email}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          input={<OutlinedInput label="Subjects" />}
-                          MenuProps={MenuProps}
-                          renderValue={(selected) => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map((value) => {
-                                const subject = subjects.find(s => s._id === value);
-                                return (
-                                  <Chip
-                                    key={value}
-                                    label={subject?.name || value}
-                                    size="small"
-                                    variant="outlined"
-                                    color="primary"
-                                  />
-                                );
-                              })}
-                            </Box>
+                          error={formik.touched.email && Boolean(formik.errors.email)}
+                          helperText={formik.touched.email && formik.errors.email}
+                        />
+                      </Grid>
+                    </div>
+
+                    <div className='flex flex-col items-center md:flex-row gap-4'>
+                      <Grid className="w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                        <StyledTextField
+                          fullWidth
+                          label="Qualification"
+                          name="qualification"
+                          value={formik.values.qualification}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched.qualification && Boolean(formik.errors.qualification)}
+                          helperText={formik.touched.qualification && formik.errors.qualification}
+                        />
+                      </Grid>
+
+                      <Grid className="w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                        <StyledTextField
+                          fullWidth
+                          label="Age"
+                          name="age"
+                          value={formik.values.age}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched.age && Boolean(formik.errors.age)}
+                          helperText={formik.touched.age && formik.errors.age}
+                        />
+                      </Grid>
+                    </div>
+
+                    <div className='flex flex-col items-center md:flex-row gap-4'>
+                      <Grid className="w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                        <FormControl fullWidth error={formik.touched.subjects && Boolean(formik.errors.subjects)}>
+                          <InputLabel>Subjects</InputLabel>
+                          <Select
+                            multiple
+                            value={formik.values.subjects}
+                            name="subjects"
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            input={<OutlinedInput label="Subjects" />}
+                            MenuProps={MenuProps}
+                            renderValue={(selected) => (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {selected.map((value) => {
+                                  const subject = subjects.find(s => s._id === value);
+                                  return (
+                                    <Chip
+                                      key={value}
+                                      label={subject?.subjectName || value}
+                                      size="small"
+                                      variant="outlined"
+                                      color="primary"
+                                    />
+                                  );
+                                })}
+                              </Box>
+                            )}
+                            sx={{
+                              borderRadius: 3,
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(255, 255, 255, 0.23)',
+                              },
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#FF6B35',
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#FF6B35',
+                              },
+                            }}
+                          >
+                            {subjects.map((subject) => (
+                              <MenuItem key={subject._id} value={subject._id}>
+                                {subject.subjectName}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          {formik.touched.subjects && formik.errors.subjects && (
+                            <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
+                              {formik.errors.subjects}
+                            </Typography>
                           )}
-                          sx={{
-                            borderRadius: 3,
-                            '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: 'rgba(255, 255, 255, 0.23)',
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#FF6B35',
-                            },
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#FF6B35',
-                            },
-                          }}
-                        >
-                          {subjects.map((subject) => (
-                            <MenuItem key={subject._id} value={subject._id}>
-                              {subject.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                        {formik.touched.subjects && formik.errors.subjects && (
-                          <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
-                            {formik.errors.subjects}
-                          </Typography>
-                        )}
-                      </FormControl>
-                    </Grid>
+                        </FormControl>
+                      </Grid>
 
-                    <Grid item xs={12} sm={6}>
-                      <FormControl fullWidth error={formik.touched.teacherClasses && Boolean(formik.errors.teacherClasses)}>
-                        <InputLabel>Classes</InputLabel>
-                        <Select
-                          multiple
-                          value={formik.values.teacherClasses}
-                          name="teacherClasses"
+                      <Grid className="w-[90%] lg:w-1/2" item xs={12} sm={6}>
+                        <FormControl fullWidth error={formik.touched.teacherClasses && Boolean(formik.errors.teacherClasses)}>
+                          <InputLabel>Classes</InputLabel>
+                          <Select
+                            multiple
+                            value={formik.values.teacherClasses}
+                            name="teacherClasses"
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            input={<OutlinedInput label="Classes" />}
+                            MenuProps={MenuProps}
+                            renderValue={(selected) => (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {selected.map((value) => {
+                                  const cls = classes.find(c => c._id === value);
+                                  return (
+                                    <Chip
+                                      key={value}
+                                      label={cls?.classText || value}
+                                      size="small"
+                                      variant="outlined"
+                                      color="secondary"
+                                    />
+                                  );
+                                })}
+                              </Box>
+                            )}
+                            sx={{
+                              borderRadius: 3,
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(255, 255, 255, 0.23)',
+                              },
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#FF6B35',
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#FF6B35',
+                              },
+                            }}
+                          >
+                            {classes.map((cls) => (
+                              <MenuItem key={cls._id} value={cls._id}>
+                                {cls.classText}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          {formik.touched.teacherClasses && formik.errors.teacherClasses && (
+                            <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
+                              {formik.errors.teacherClasses}
+                            </Typography>
+                          )}
+                        </FormControl>
+                      </Grid>
+                    </div>
+
+                    <div className='flex flex-col items-center gap-4'>
+                      <Grid className='w-[90%] lg:w-[100%]' item xs={12} sm={6}>
+                        <FormControl fullWidth error={formik.touched.gender && Boolean(formik.errors.gender)}>
+                          <InputLabel>Gender</InputLabel>
+                          <Select
+                            value={formik.values.gender}
+                            name="gender"
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            input={<OutlinedInput label="Gender" />}
+                            sx={{
+                              borderRadius: 3,
+                              '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(255, 255, 255, 0.23)',
+                              },
+                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#FF6B35',
+                              },
+                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#FF6B35',
+                              },
+                            }}
+                          >
+                            <MenuItem value="Male">Male</MenuItem>
+                            <MenuItem value="Female">Female</MenuItem>
+                            <MenuItem value="Other">Other</MenuItem>
+                          </Select>
+                          {formik.touched.gender && formik.errors.gender && (
+                            <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
+                              {formik.errors.gender}
+                            </Typography>
+                          )}
+                        </FormControl>
+                      </Grid>
+
+                      <Grid className='w-[90%] lg:w-[100%]' item xs={12} sm={6}>
+                        <StyledTextField
+                          fullWidth
+                          label="Password"
+                          name="password"
+                          type="password"
+                          value={formik.values.password}
                           onChange={formik.handleChange}
                           onBlur={formik.handleBlur}
-                          input={<OutlinedInput label="Classes" />}
-                          MenuProps={MenuProps}
-                          renderValue={(selected) => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map((value) => {
-                                const cls = classes.find(c => c._id === value);
-                                return (
-                                  <Chip
-                                    key={value}
-                                    label={cls?.name || value}
-                                    size="small"
-                                    variant="outlined"
-                                    color="secondary"
-                                  />
-                                );
-                              })}
-                            </Box>
-                          )}
-                          sx={{
-                            borderRadius: 3,
-                            '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: 'rgba(255, 255, 255, 0.23)',
-                            },
-                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#FF6B35',
-                            },
-                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#FF6B35',
-                            },
-                          }}
-                        >
-                          {classes.map((cls) => (
-                            <MenuItem key={cls._id} value={cls._id}>
-                              {cls.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                        {formik.touched.teacherClasses && formik.errors.teacherClasses && (
-                          <Typography variant="caption" color="error" sx={{ mt: 1, ml: 2 }}>
-                            {formik.errors.teacherClasses}
-                          </Typography>
+                          error={formik.touched.password && Boolean(formik.errors.password)}
+                          helperText={formik.touched.password && formik.errors.password}
+                        />
+                      </Grid>
+
+                      <Grid className='w-[90%] lg:w-[100%]' item xs={12} sm={6}>
+                        <StyledTextField
+                          fullWidth
+                          label="Confirm Password"
+                          name="confirmPassword"
+                          type="password"
+                          value={formik.values.confirmPassword}
+                          onChange={formik.handleChange}
+                          onBlur={formik.handleBlur}
+                          error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+                          helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                        />
+                      </Grid>
+                    </div>
+
+                    <Grid item xs={12}>
+                      <Box sx={{ textAlign: 'center', mb: 2 }}>
+                        <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
+                          Teacher Image
+                        </Typography>
+
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={addImage}
+                          style={{ display: 'none' }}
+                          ref={hiddenFileInputRef}
+                        />
+
+                        {imageUrl ? (
+                          <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                            <Avatar
+                              src={imageUrl}
+                              sx={{
+                                width: 120,
+                                height: 120,
+                                mb: 2,
+                                border: '3px solid #FF6B35',
+                                boxShadow: '0 8px 32px rgba(255, 107, 53, 0.3)'
+                              }}
+                            />
+                            <IconButton
+                              onClick={handleClearFile}
+                              sx={{
+                                position: 'absolute',
+                                top: -5,
+                                right: -5,
+                                bgcolor: 'error.main',
+                                color: 'white',
+                                width: 32,
+                                height: 32,
+                                '&:hover': { bgcolor: 'error.dark' }
+                              }}
+                            >
+                              <CloseIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Box>
+                        ) : (
+                          <Box
+                            onClick={handleUploadClick}
+                            sx={{
+                              border: '2px dashed #FF6B35',
+                              borderRadius: 0.75,
+                              p: 4,
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease',
+                              '&:hover': {
+                                borderColor: '#FF8A65',
+                                bgcolor: 'rgba(255, 107, 53, 0.05)'
+                              }
+                            }}
+                          >
+                            <CloudUploadIcon sx={{ fontSize: 48, color: '#FF6B35', mb: 1 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              Click to upload teacher image
+                            </Typography>
+                          </Box>
                         )}
-                      </FormControl>
+                      </Box>
                     </Grid>
 
                     <Grid item xs={12}>
                       <Stack direction="row" spacing={2} justifyContent="center">
                         <Button
                           type="submit"
-                          variant="contained"
+                          variant="outlined"
                           disabled={loading}
                           startIcon={loading ? <CircularProgress size={20} /> : <SchoolIcon />}
                           sx={{ minWidth: 140 }}
@@ -1085,7 +1159,7 @@ export default function Teachers() {
                     {teachers.length} student{teachers.length !== 1 ? 's' : ''} found
                   </Typography>
                 </div>
-                <div className="flex justify-evenly flex-col lg:flex-row items-center gap-5 lg:gap-2 lg:p-2">
+                <div className="flex justify-evenly flex-col lg:flex-row items-center gap-4 lg:gap-4 lg:p-2">
                   <div className='order-1'>
                     {(filterClass || filterSubject) && <Grid item xs={12} sm={12} md={3}>
                       <Button
@@ -1098,7 +1172,7 @@ export default function Teachers() {
                       </Button>
                     </Grid>}
                   </div>
-                  <Grid  sx={{ width: { lg: "300px", xs: "250px" } }} xs={12} sm={6} md={4}>
+                  <Grid sx={{ width: { lg: "300px", xs: "250px" } }} xs={12} sm={6} md={4}>
                     <TextField
                       fullWidth
                       placeholder="Search Teachers..."
@@ -1109,7 +1183,7 @@ export default function Teachers() {
                       }}
                     />
                   </Grid>
-                  <div className='flex gap-5 w-[100%]'>
+                  <div className='flex gap-4 w-[100%]'>
                     <div className='w-1/2'>
                       <FormControl fullWidth>
                         <InputLabel>Filter by Class</InputLabel>
@@ -1151,7 +1225,7 @@ export default function Teachers() {
           {/* Teachers Grid */}
           {!form && (
             <Fade in={!form}>
-              <div className='flex flex-wrap gap-5 mt-5 lg:mt-10 justify-center'>
+              <div className='flex flex-wrap gap-4 mt-5 lg:mt-10 justify-center'>
                 {teachers.length === 0 ? (
                   <Grid item xs={12}>
                     <Paper
@@ -1325,7 +1399,7 @@ export default function Teachers() {
           fullWidth
           PaperProps={{
             sx: {
-              bgcolor: 'rgba(30, 30, 46, 0.95)',
+              bgcolor: '#1e1e1e',
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
             }
@@ -1350,8 +1424,9 @@ export default function Teachers() {
               </Alert>
             )}
 
+            <Divider sx={{ mb: 2 }} />
             <form onSubmit={editFormik.handleSubmit}>
-              <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid className="flex flex-col gap-4">
                 <Grid item xs={12} sm={6}>
                   <StyledTextField
                     fullWidth
@@ -1493,6 +1568,72 @@ export default function Teachers() {
                       ))}
                     </Select>
                   </FormControl>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
+                      Teacher Image
+                    </Typography>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={addEditImage}
+                      style={{ display: 'none' }}
+                      ref={editFileInputRef}
+                    />
+
+                    {editImageUrl ? (
+                      <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                        <Avatar
+                          src={editImageUrl}
+                          sx={{
+                            width: 120,
+                            height: 120,
+                            mb: 2,
+                            border: '3px solid #FF6B35',
+                            boxShadow: '0 8px 32px rgba(255, 107, 53, 0.3)'
+                          }}
+                        />
+                        <IconButton
+                          onClick={handleClearEditFile}
+                          sx={{
+                            position: 'absolute',
+                            top: -5,
+                            right: -5,
+                            bgcolor: 'error.main',
+                            color: 'white',
+                            width: 32,
+                            height: 32,
+                            '&:hover': { bgcolor: 'error.dark' }
+                          }}
+                        >
+                          <CloseIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Box>
+                    ) : (
+                      <Box
+                        onClick={handleEditUploadClick}
+                        sx={{
+                          border: '2px dashed #FF6B35',
+                          borderRadius: 2,
+                          p: 4,
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            borderColor: '#FF8A65',
+                            bgcolor: 'rgba(255, 107, 53, 0.05)'
+                          }
+                        }}
+                      >
+                        <CloudUploadIcon sx={{ fontSize: 48, color: '#FF6B35', mb: 1 }} />
+                        <Typography variant="body2" color="text.secondary">
+                          Click to upload new image
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
                 </Grid>
               </Grid>
             </form>
