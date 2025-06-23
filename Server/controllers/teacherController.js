@@ -2,6 +2,7 @@ const formidable = require("formidable");
 const Teacher = require("../models/teacherModel");
 const path = require("path");
 const fs = require("fs");
+const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinary"); // Import your cloudinary config
 
 module.exports = {
@@ -136,6 +137,19 @@ module.exports = {
       }
 
       if (req.body.password === teacher.password) {
+        const jwtSecret = process.env.JWT_SECRET;
+        const token = jwt.sign(
+          {
+            id: teacher._id,
+            schoolId: teacher.school,
+            name: teacher.name,
+            teacherImg: teacher.teacherImg,
+            role: "TEACHER",
+          },
+          jwtSecret
+        );
+
+        res.header("Authorization", token);
 
         return res.status(200).json({
           success: true,
@@ -147,6 +161,7 @@ module.exports = {
             teacherImg: teacher.teacherImg,
             role: "TEACHER",
           },
+          token: token,
         });
       } else {
         return res
