@@ -16,6 +16,7 @@ const scheduleRouter = require('./routes/scheduleRouter');
 const attendanceRouter = require('./routes/attendanceRouter');
 const examinationRouter = require('./routes/examinationRouter');
 const noticeRouter = require('./routes/noticeRouter');
+const aiTutorRoutes = require('./routes/aiTutorRoutes');
 
 const app = express();
 app.use(express.json());
@@ -85,6 +86,7 @@ app.use('/api/school', schoolRouter);
 app.use('/api/class', classRouter);
 app.use('/api/subject', subjectRouter);
 app.use('/api/student', studentRouter);
+app.use('/api/ai-tutor', aiTutorRoutes);
 app.use('/api/teacher', teacherRouter);
 app.use('/api/schedule', scheduleRouter);
 app.use('/api/attendance', attendanceRouter);
