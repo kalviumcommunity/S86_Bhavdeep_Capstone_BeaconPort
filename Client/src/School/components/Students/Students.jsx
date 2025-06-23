@@ -878,45 +878,6 @@ export default function Students() {
                       />
                     </Grid>
 
-                    <Grid item xs={12}>
-                      <Box>
-                        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                          Student Image *
-                        </Typography>
-                        <input
-                          type="file"
-                          ref={hiddenFileInputRef}
-                          style={{ display: 'none' }}
-                          accept="image/*"
-                          onChange={addImage}
-                        />
-                        <Button
-                          onClick={handleUploadClick}
-                          startIcon={<CloudUploadIcon />}
-                          fullWidth={isMobile}
-                          variant={file ? 'outlined' : "contained"}
-                          sx={{ mb: 1 }}
-                        >
-                          {file ? 'Change Image' : 'Upload Student Image'}
-                        </Button>
-                        {file && (
-                          <div className='w-[100%]'>
-                            <Box sx={{ mt: 2, display: 'flex', flexDirection: "column", alignItems: 'flex-start', gap: 2 }}>
-                              <Chip
-                                label={file.name}
-                                onDelete={handleClearFile}
-                                color="primary"
-                                variant="outlined"
-                                sx={{ borderRadius: "5px" }}
-                              />
-                              <Typography variant="body2" className='flex justify-center lg:w-[45%]' color="success.main">
-                                Image selected successfully
-                              </Typography>
-                            </Box>
-                          </div>
-                        )}
-                      </Box>
-                    </Grid>
                   </Grid>
 
                   <Box sx={{
@@ -1231,89 +1192,6 @@ export default function Students() {
               sx={{ width: '100%' }}
             >
               <Grid container spacing={3}>
-                <div className='flex flex-col w-full lg:flex-row lg:justify-center items-center gap-10 lg:items-start m-auto'>
-                  {editImageUrl && (
-                    <Grid item xs={12}>
-                      <Box sx={{ textAlign: 'center', mb: 2 }}>
-                        <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                          Current Student Image
-                        </Typography>
-                        <CardMedia
-                          component="img"
-                          height="200"
-                          image={editImageUrl}
-                          alt="Current student"
-                          sx={{
-                            borderRadius: 2,
-                            maxWidth: 300,
-                            mx: 'auto',
-                            objectFit: 'cover',
-                          }}
-                        />
-                      </Box>
-                    </Grid>
-                  )}
-
-                  <Grid item xs={12}>
-                    <Box>
-                      <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                        Update Student Image (Optional)
-                      </Typography>
-                      <input
-                        type="file"
-                        ref={editFileInputRef}
-                        style={{ display: 'none' }}
-                        accept="image/*"
-                        onChange={(e) => {
-                          const selectedFile = e.target.files[0];
-                          if (selectedFile) {
-                            setEditFile(selectedFile);
-                            const imageUrl = URL.createObjectURL(selectedFile);
-                            setEditImageUrl(imageUrl);
-                          }
-                        }}
-                      />
-                      <Box sx={{ display: 'flex', gap: 2, flexDirection: isMobile ? 'column' : 'row' }}>
-                        <Button
-                          onClick={handleEditUploadClick}
-                          startIcon={<CloudUploadIcon />}
-                          variant={editFile ? "outlined" : "contained"}
-                          fullWidth={isMobile}
-                        >
-                          {editFile ? 'Change Image' : 'Upload New Image'}
-                        </Button>
-                        {(editFile || editImageUrl !== originalEditImageUrl) && (
-                          <Button
-                            onClick={handleClearEditFile}
-                            variant="contained"
-                            startIcon={<CloseIcon />}
-                            fullWidth={isMobile}
-                          >
-                            Reset Image
-                          </Button>
-                        )}
-                      </Box>
-
-
-                      {editFile && (
-                        <Box sx={{ mt: 2 }}>
-                          <Chip
-                            label={editFile.name}
-                            onDelete={() => {
-                              setEditFile(null);
-                              setEditImageUrl(originalEditImageUrl);
-                              if (editFileInputRef.current) {
-                                editFileInputRef.current.value = '';
-                              }
-                            }}
-                            color="primary"
-                            variant="outlined"
-                          />
-                        </Box>
-                      )}
-                    </Box>
-                  </Grid>
-                </div>
                 <div className='flex flex-col items-center w-[100%] gap-5'>
                   <Grid className=" w-[90%] lg:w-1/2" item xs={12} sm={6}>
                     <TextField
