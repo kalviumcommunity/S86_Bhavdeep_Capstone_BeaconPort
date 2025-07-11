@@ -3,9 +3,10 @@ import axios from 'axios';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import { useFormik } from 'formik';
-import { Button, Typography, Alert, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Button, Typography, Alert, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, InputAdornment, IconButton } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import BookIcon from '@mui/icons-material/MenuBook';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { School, Users, GraduationCap } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loginSchema } from '../../../yupSchema/loginSchema';
@@ -72,6 +73,16 @@ const darkTheme = createTheme({
         },
       },
     },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          color: '#BBBBBB',
+          '&:hover': {
+            color: '#FF9800',
+          },
+        },
+      },
+    },
   },
 });
 
@@ -84,6 +95,7 @@ export default function Login() {
   const [success, setSuccess] = React.useState(null);
   const [rememberMe, setRememberMe] = React.useState(false);
   const [oauthLoading, setOauthLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   // Forgot Password states
   const [forgotPasswordOpen, setForgotPasswordOpen] = React.useState(false);
@@ -222,6 +234,10 @@ export default function Login() {
 
   const handleRememberMeChange = () => {
     setRememberMe(!rememberMe);
+  };
+
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
 // Fixed Forgot Password Handler in Login Component
@@ -469,7 +485,7 @@ const handleForgotPassword = async () => {
           />
 
           <TextField
-            type='password'
+            type={showPassword ? 'text' : 'password'}
             name="password"
             label="Password"
             value={formik.values.password}
@@ -478,6 +494,19 @@ const handleForgotPassword = async () => {
             error={formik.touched.password && Boolean(formik.errors.password)}
             helperText={formik.touched.password && formik.errors.password}
             sx={{ mb: 3 }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={handleTogglePasswordVisibility}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
 
           <div className="flex items-center justify-between mb-4">

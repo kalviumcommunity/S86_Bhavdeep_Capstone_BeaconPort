@@ -5,11 +5,13 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import { useFormik } from 'formik';
 import { registerSchema } from '../../../yupSchema/registerSchema';
-import { Button, CardMedia, Typography, Alert, CircularProgress } from '@mui/material';
+import { Button, CardMedia, Typography, Alert, CircularProgress, InputAdornment, IconButton } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import BookIcon from '@mui/icons-material/MenuBook';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useNavigate } from 'react-router-dom';
 import { baseApi } from '../../../environment';
 
@@ -76,6 +78,16 @@ const darkTheme = createTheme({
         },
       },
     },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          color: '#BBBBBB',
+          '&:hover': {
+            color: '#FF9800',
+          },
+        },
+      },
+    },
   },
 });
 
@@ -90,6 +102,19 @@ export default function Register() {
   const [termsAccepted, setTermsAccepted] = React.useState(false);
   const [oauthData, setOauthData] = React.useState(null);
   const [showOauthForm, setShowOauthForm] = React.useState(false);
+  
+  // Password visibility states
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+
+  // Toggle password visibility functions
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
+  const handleClickShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+
+  // Prevent mousedown event on password toggle buttons
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
 
   // Improved image validation
   const isValidImageFile = (file) => {
@@ -578,7 +603,7 @@ export default function Register() {
               />
 
               <TextField
-                type='password'
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 label="Password"
                 value={formik.values.password}
@@ -587,10 +612,24 @@ export default function Register() {
                 error={formik.touched.password && Boolean(formik.errors.password)}
                 helperText={formik.touched.password && formik.errors.password}
                 sx={{ mb: 2 }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
 
               <TextField
-                type='password'
+                type={showConfirmPassword ? 'text' : 'password'}
                 name="confirmPassword"
                 label="Confirm password"
                 value={formik.values.confirmPassword}
@@ -599,6 +638,20 @@ export default function Register() {
                 error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
                 helperText={formik.touched.confirmPassword && formik.errors.confirmPassword}
                 sx={{ mb: 3 }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle confirm password visibility"
+                        onClick={handleClickShowConfirmPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
 
               <Typography className="text-gray-300 mb-1">Institute Image * (will be saved to Cloudinary)</Typography>
